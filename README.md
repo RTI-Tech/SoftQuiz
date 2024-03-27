@@ -44,15 +44,9 @@ SoftQuiz est une application de gestion académique conçue pour permettre aux u
 
 - **Éducation :** SoftQuiz peut être utilisé par les enseignants pour créer des quiz interactifs pour évaluer les connaissances des élèves sur différents sujets.
 
-- **Recrutement :** Les entreprises peuvent utiliser SoftQuiz pour créer des évaluations de compétences et des tests de recrutement pour les candidats.
-
-## Contributions
-
-Les contributions à SoftQuiz sont les bienvenues! Si vous souhaitez contribuer au projet, veuillez consulter notre [guide de contribution](CONTRIBUTING.md) pour obtenir des instructions sur la manière de démarrer.
-
 ## Support
 
-Si vous rencontrez des problèmes avec SoftQuiz ou si vous avez des questions, n'hésitez pas à contacter notre équipe de support à support@softquiz.com.
+Si vous rencontrez des problèmes avec SoftQuiz ou si vous avez des questions, n'hésitez pas à contacter notre équipe de support à rti.tech.goma@gmail.com
 
 ## Licence
 
