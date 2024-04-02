@@ -47,7 +47,3 @@ SoftQuiz est une application de gestion académique conçue pour permettre aux u
 ## Support
 
 Si vous rencontrez des problèmes avec SoftQuiz ou si vous avez des questions, n'hésitez pas à contacter notre équipe de support à rti.tech.goma@gmail.com
-
-## Licence
-
-SoftQuiz est sous licence sous [Licence MIT](LICENSE).
