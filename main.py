@@ -1,4 +1,7 @@
-from random import choices
+from socket import AF_INET, SOCK_STREAM, SOCK_DGRAM, getaddrinfo, socket
+from threading import Event, Thread
+from traceback import print_exc, print_last
+from random import randint, sample
 from time import sleep
 from flet import*
 
@@ -19,7 +22,7 @@ class Main:
 
         # Le thème de l'application
         page.theme = Theme(
-            color_scheme_seed=colors.BLUE,
+            color_scheme_seed=colors.BLUE_400
         )
 
         page.theme_mode = ThemeMode.LIGHT
@@ -55,15 +58,16 @@ class Main:
         self.page.route = self.page.views[-1].route
         self.page.update()
 
-    def on_route_change(self, event: RouteChangeEvent):     
+    def on_route_change(self, event: RouteChangeEvent):
         if self.page.views and self.page.views[-1].route == event.route: return
         {
             "": self.Page_Animation,
             "Selection": self.Page_Selection,
             "Accueil": self.Page_Accueil,
-            "Connection": self.Page_Connection
+            "Connection": self.Page_Connection,
+            "Evaluation_locale": self.Page_Evaluation_Locale
 
-        }.get(event.data.removeprefix("/")) ()
+        }.get(event.route.removeprefix("/")) ()
 
     def Page_Animation(self):
         self.page.controls.clear()
@@ -79,8 +83,8 @@ class Main:
 
         self.anim_text = Text(
             "Pour une une gestion optimale de vos évalutions",
-            font_family="Times",
-            theme_style=TextThemeStyle.TITLE_MEDIUM,
+            #font_family="Times",
+            #theme_style=TextThemeStyle.TITLE_MEDIUM,
             text_align=TextAlign.CENTER,
             opacity=0,
             offset=Offset(0, -1),
@@ -292,7 +296,7 @@ class Main:
                             keyboard_type=KeyboardType.NUMBER,
                             input_filter=InputFilter(r"[\d]+"),
                             border_color=colors.BLACK38,
-                            focused_border_color=colors.BLUE,
+                            focused_border_color=colors.BLUE_400,
                             bgcolor=colors.WHITE,
                             prefix_icon=icons.ACCOUNT_BOX_ROUNDED,
                             dense=True,
@@ -303,7 +307,7 @@ class Main:
                             label="Mot de passe",
                             border_radius=10,
                             border_color=colors.BLACK38,
-                            focused_border_color=colors.BLUE,
+                            focused_border_color=colors.BLUE_400,
                             bgcolor=colors.WHITE,
                             prefix_icon=icons.KEY_ROUNDED,
                             password=True,
@@ -373,55 +377,96 @@ class Main:
         self.page.update()
 
     def Page_Accueil(self):
+
         self.Home_Page = Tabs(
             tabs=[
                 Tab(
-                    "Accueil",
-                    Container(    
+                    tab_content=Row(
+                        [    
+                            Icon(icons.HOME_ROUNDED),
+                            Text("Accueil")
+                        ]
+                    ),
+                    content=Container(    
                         Column(
                             [   
-                                ExpansionPanelList(
+                                ResponsiveRow(
                                     [
-                                        ExpansionPanel(
-                                            ListTile(
-                                                leading=Icon(icons.MORE_VERT_ROUNDED),
-                                                title=Text(cours),
-                                                subtitle=Text("L2 LMD")
-                                            ),
-                                            bgcolor=color,
-                                            can_tap_header=True,
-                                            content=Container(
-                                                    Row(
-                                                        [
-                                                            IconButton(icons.BAR_CHART_ROUNDED, colors.BLACK),
-                                                            IconButton(icons.FOLDER_ROUNDED, colors.BLACK),
-                                                            IconButton(icons.ACCOUNT_BOX_ROUNDED, colors.BLACK),
-                                                        ],
-                                                        alignment=MainAxisAlignment.END,
-                                                        vertical_alignment=CrossAxisAlignment.END
+                                        Container(
+                                            ExpansionTile(
+                                                [
+                                                    Container(
+                                                        Row(
+                                                            [
+                                                                IconButton(icons.BAR_CHART_ROUNDED, colors.BLACK),
+                                                                IconButton(icons.ASSIGNMENT_OUTLINED, colors.BLACK),
+                                                                IconButton(icons.ACCOUNT_CIRCLE_ROUNDED, colors.BLACK),
+                                                            ],
+                                                            alignment=MainAxisAlignment.END,
+                                                            vertical_alignment=CrossAxisAlignment.END,
+                                                            spacing=0
+                                                        ),
+                                                        height=150,
+                                                        border_radius=border_radius.vertical(0, 40),
+                                                        padding=5,
+                                                        bgcolor=colors.WHITE,
+                                                        border=border.only(top=BorderSide(1, colors.GREY))
+                                                    ),
+                                                ],
+
+                                                leading=IconButton(icons.MORE_VERT_ROUNDED),
+                                                tile_padding=padding.only(right=20),
+                                                title=Row(
+                                                    [
+                                                        Text(cours),
+                                                        Badge(
+                                                            text=(i := randint(0, 5)),
+                                                            bgcolor='pink500',
+                                                            label_visible=bool(i)
+                                                        )
+                                                    ],
+                                                    alignment=MainAxisAlignment.SPACE_BETWEEN
                                                 ),
-                                                height=150,
-                                                bgcolor=colors.WHITE,
+                                                subtitle=Text("L2 LMD"),
+                                                shape=RoundedRectangleBorder(),
+                                                icon_color=colors.BLACK,
+                                                initially_expanded=True,
+                                                #maintain_state=True
                                             ),
-                                        ) for cours, color in zip(("Physique", "Algèbre", "Algorithme", "Java", "Trigonométrie"), choices([color for color in list(colors.__dict__.values())[9:] if color.endswith("100")], k=5))
+                                        bgcolor=color,
+                                        border=border.all(1, colors.GREY_500),
+                                        border_radius=40,
+                                        col={"sm":6, "lg":4, "xxl":3}
+                                        ) for cours, color in zip(("Physique", "Algèbre", "Algorithme", "Java", "Trigonométrie"), sample([color for color in list(colors.__dict__.values())[9:] if color.endswith("100")], k=5))
                                     ],
-                                    divider_color=colors.WHITE,
-                                    spacing=10
-                                ),
-                            ], 
+                                    columns=12
+                                )
+                            ],
                             scroll=ScrollMode.ADAPTIVE
                         ),
                         bgcolor=colors.WHITE,
-                        padding=padding.symmetric(20, 10)
+                        padding=padding.symmetric(15, 10)
                     )
                 ),
+                
                 Tab(
-                    "Cours",
-                    Container(bgcolor=colors.WHITE)
+                    tab_content=Row(
+                        [    
+                            Icon(icons.COLLECTIONS_BOOKMARK_ROUNDED),
+                            Text("Cours")
+                        ]
+                    ),
+                    content=Container(bgcolor=colors.WHITE)
                 ),
+                
                 Tab(
-                    "Compte",
-                    Container(
+                    tab_content=Row(
+                        [    
+                            Icon(icons.SUPERVISOR_ACCOUNT_ROUNDED),
+                            Text("Compte")
+                        ]
+                    ),
+                    content=Container(
                         Column(
                             [
                                 Container(
@@ -469,13 +514,13 @@ class Main:
                                                     ],
                                                     alignment=MainAxisAlignment.SPACE_AROUND
                                                 ),
-                                                bgcolor=colors.BLUE_400,
+                                                bgcolor=colors.BLUE_600,
                                                 padding=padding.symmetric(0, 10)
                                             )
                                         ],
                                         horizontal_alignment=CrossAxisAlignment.CENTER
                                     ),
-                                    bgcolor=colors.BLUE_300,
+                                    bgcolor=colors.BLUE_400,
                                     border_radius=border_radius.vertical(bottom=30),
                                     width=self.page.width,
                                     padding=padding.only(top=30)
@@ -495,43 +540,53 @@ class Main:
                         ),
                         bgcolor=colors.BLUE_50
                     )
-                )
+                ),
             ],
             tab_alignment=TabAlignment.CENTER,
-            #indicator_color=colors.WHITE,
-            label_color=colors.WHITE,
-            unselected_label_color=colors.BLACK,
-            #selected_index=2,
+            indicator_color=colors.TRANSPARENT,
+            label_color=colors.BLACK,
+            unselected_label_color=colors.WHITE70,
             divider_color=colors.BLUE_400,
-            expand=True,
+            expand=True
         )
 
         self.page.views.clear()
 
         self.page.views.append(
             View(
-                "Acueil",
+                "Accueil",
                 [
                     Container(
                         self.Home_Page,
-                        bgcolor=colors.BLUE_300,
+                        bgcolor=colors.BLUE_400,
                         expand=True
                     )
                 ],
+                
                 appbar= AppBar(
                     leading=IconButton(icons.MENU_ROUNDED, on_click=lambda e: self.page.show_drawer(self.page.views[-1].drawer)),
                     title=Text("SoftQuiz"),
-                    #center_title=True,
+                    center_title=True,
                     actions=[
-                        IconButton(icons.BRIGHTNESS_6_OUTLINED),
                         IconButton(icons.SEARCH_ROUNDED),
+                        IconButton(
+                            icons.BRIGHTNESS_6_OUTLINED,
+                            selected_icon=icons.BRIGHTNESS_6,
+                            selected=self.page.theme_mode == ThemeMode.DARK,
+                            on_click=lambda e: (
+                                (self.page.__setattr__("theme_mode", ThemeMode.LIGHT), e.control.__setattr__("selected", False)) if self.page.theme_mode == ThemeMode.DARK
+                                else (self.page.__setattr__("theme_mode", ThemeMode.DARK), e.control.__setattr__("selected", True)),
+                                self.page.update()
+                            )
+                        ),
                         #IconButton(icons.MORE_VERT_SHARP)
                     ],
                     elevation=0,
                     #color="red",
                     #toolbar_height=40,
-                    bgcolor=colors.BLUE_300
+                    bgcolor=colors.BLUE_400
                 ),
+                
                 bottom_appbar=BottomAppBar(
                     bgcolor=colors.BLUE_300,
                     shape=NotchShape.CIRCULAR,
@@ -551,55 +606,128 @@ class Main:
                         ),
                         padding=padding.symmetric(10)
                     ),
-                    height=100
+                    height=100,
+                    visible=False
+                ),
+
+                drawer = NavigationDrawer(
+                    [
+                        Container(
+                            IconButton(
+                                icons.CLOSE_ROUNDED,
+                                on_click=lambda e: self.page.close_drawer()
+                            ),
+                            alignment=Alignment(-0.9, 0),
+                            on_click=lambda e: self.page.close_drawer(),
+                            ink=True
+                        ),
+                        
+                        Image(
+                            "SoftQuiz_logo.png",
+                            fit=ImageFit.FIT_HEIGHT,
+                            offset=Offset(-0.01, -0.2),
+                            height=80
+                        ),
+                        
+                        NavigationDrawerDestination(
+                            "Accueil",
+                            icons.HOME_ROUNDED
+                        ),
+                        
+                        NavigationDrawerDestination(
+                            "Cours",
+                            icons.COLLECTIONS_BOOKMARK_ROUNDED
+                        ),
+                        
+                        NavigationDrawerDestination(
+                            "Compte",
+                            icons.ACCOUNT_CIRCLE_ROUNDED
+                        ),
+
+                        Divider(thickness=1),
+
+                        NavigationDrawerDestination(
+                            "Parametres",
+                            icons.SETTINGS_ROUNDED
+                        ),
+
+                        NavigationDrawerDestination(
+                            "A prpos",
+                            icons.INFO_OUTLINE_ROUNDED
+                        ),
+
+                        Divider(thickness=1),
+
+                        Container(height=self.page.height - 630),
+
+                        NavigationDrawerDestination(
+                            "Déconnexion",
+                            icons.LOGOUT_ROUNDED
+                        ),
+
+                        NavigationDrawerDestination(
+                            "Quitter",
+                            icons.POWER_SETTINGS_NEW_ROUNDED
+                        ),
+
+                        NavigationDrawerDestination(
+                            "Réduire",
+                            icons.ARROW_BACK_IOS_NEW_ROUNDED
+                        ),
+
+                        TextButton("v1.0.0"),
+                    ],
+                    on_change=lambda e: (self.page.show_dialog(self.page.dialog) if e.data == "5" else
+                                         self.page.close_drawer() if e.data == "7" else None)
                 ),
 
                 floating_action_button=FloatingActionButton(
-                    icon=icons.ADD_ROUNDED,
-                    bgcolor=colors.BLUE_500,
-                    on_click=lambda e: (self.page.overlay.append(TextField("localhost:81", prefix_text="http://", bgcolor=colors.WHITE, on_submit=lambda e: (self.page.overlay.append(FletApp("http://" + e.control.value, 0, 10_000, on_error=lambda e: print(e.data), expand=True)), self.page.update()))), self.page.update())
+                    content=PopupMenuButton(
+                        Icon(
+                            icons.POST_ADD_ROUNDED,
+                            colors.BLACK,
+                            26
+                        ),
+                        items=[
+                            PopupMenuItem(
+                                "Evaluation locale",
+                                icons.BROADCAST_ON_HOME_ROUNDED, #ADD_TO_QUEUE_OUTLINED,
+                                on_click=lambda e: self.page.go("Evaluation_locale")
+                            ),
+                            PopupMenuItem(
+                                "Nouveau cours",
+                                icons.MY_LIBRARY_ADD_OUTLINED
+                            ),
+                            PopupMenuItem(
+                                "Nouveau Document",
+                                icons.POST_ADD_OUTLINED
+                            ),
+                            PopupMenuItem(
+                                "Nouvelle classe",
+                                icons.DOMAIN_ADD_OUTLINED
+                            ),
+                            PopupMenuItem(
+                                "Nouvelle evaluation",
+                                icons.ASSIGNMENT_ADD
+                            ),
+                            PopupMenuItem(
+                                "Nouvelle personne",
+                                icons.PERSON_ADD_ALT_1_OUTLINED
+                            )
+                        ]
+                    ),
+                    bgcolor=colors.BLUE_400
                 ),
-                floating_action_button_location=FloatingActionButtonLocation.CENTER_DOCKED,
+                
+                floating_action_button_location=FloatingActionButtonLocation.END_FLOAT,
                 padding=0,
             )
         )
 
         self.selected = selected
-
-        self.page.views[-1].drawer = NavigationDrawer(
-            [
-                NavigationDrawerDestination(
-                    #self.page.client_storage.get("identifiants")["matricule"]
-                    icon_content=Icon(icons.CLOSE_ROUNDED, colors.BLACK)
-                ),
-                Divider(thickness=1),
-                NavigationDrawerDestination(
-                    "Compte",
-                    icons.ACCOUNT_CIRCLE_ROUNDED
-                ),
-                NavigationDrawerDestination(
-                    "Parametres",
-                    icons.SETTINGS_ROUNDED
-                ),
-                NavigationDrawerDestination(
-                    "A prpos",
-                    icons.INFO_OUTLINE_ROUNDED
-                ),
-                Container(
-                    height=self.page.height - 350
-                ),
-                NavigationDrawerDestination("Déconnexion", icons.LOGOUT_ROUNDED),
-            ],
-            selected_index=4,
-            bgcolor=colors.BLUE_50,
-            indicator_color=colors.BLUE_400,
-            on_change=lambda e: (self.page.close_drawer() if e.data == "0" else
-                                 self.page.show_dialog(self.page.dialog) if e.data == "4" else None),
-            on_dismiss=lambda e: self.page.views[-1].drawer.__setattr__("selected_index", 4)
-        )
         
         self.page.dialog = AlertDialog(
-            True,
+            False,
             Text("Déconnection"),
             Text("Souhaitez-vous vraiment vous déconnecter ?"),
             [
@@ -610,12 +738,180 @@ class Main:
                     ],
                     alignment=MainAxisAlignment.SPACE_EVENLY
                     )
-                ]
-            )
+            ]
+        )
 
-        #setattr(self.page.theme.page_transitions, self.page.platform.value, PageTransitionTheme.ZOOM)
+        setattr(self.page.theme.page_transitions, self.page.platform.value, PageTransitionTheme.ZOOM)
         self.page.update()
 
+    def Page_Evaluation_Locale(self):
+        block = Event()
+
+        def recherche():
+            if block.is_set(): block.clear()
+            
+            Adresses = [addr[-1][0] for addr in getaddrinfo('', 80, AF_INET)]
+            print(Adresses)
+            
+            s = socket(type=SOCK_DGRAM)
+
+            try:  s.connect(("8.8.8.8", 53))
+            except Exception as e: print(e); self.text.visible = True; self.page.update()
+            else: self.text.visible = False; self.page.update()
+
+            for addresse in Adresses:
+                tete, _, _ = addresse.rpartition(".")
+
+                for i in range(1, 255):
+                    addr = f"{tete}.{i}"
+                    try:
+                        my_socket = socket(AF_INET, SOCK_STREAM)
+                        my_socket.settimeout(0.01)
+                        
+                        my_socket.connect((addr, 81))
+
+                    except TimeoutError: my_socket.close(); print(addr)
+                    except: print(addr); print_exc(); my_socket.close()
+                    else:
+                        self.page.overlay.append(App := FletApp(
+                                                    f"http://{addr}:81",
+                                                    1000,
+                                                    on_error=lambda e: (print(f"Erreur lors de la connection à {e.control.url}"), block.set() if not block.isSet() else Thread(target=recherche).start(), self.page.overlay.clear(), self.page.update())
+                                                    )
+                        )
+
+                        print("Trouvé :", addr)
+                        self.page.update()
+                        if block.wait(60): block.clear()
+                        else: block.set(); return print("Connection supposée réussie")
+                        print("Retour")
+
+            self.text.visible = True; self.page.update()
+            if self.page.views[-1].route == "Evaluation_locale": print("recommencer"); recherche()
+
+        self.page.views.append(
+            View(
+                "Evaluation_locale",
+                [
+                    Container(
+                        Column(
+                            [
+                                Text(
+                                    "Recherche d'une évaluation",
+                                    theme_style=TextThemeStyle.TITLE_MEDIUM
+                                ),
+
+                                Stack(
+                                    [
+                                        IconButton(
+                                            icons.WIFI_FIND_ROUNDED,
+                                            width=40,
+                                            height=40
+                                        ),
+                                        ProgressRing(
+                                            stroke_width=2,
+                                            width=40,
+                                            height=40
+                                        )
+                                    ]
+                                ),
+
+                                text := Text(
+                                    "Rassurez-vous que vous êtes connecté au réseau WI-FI !",
+                                    color=colors.RED,
+                                    text_align=TextAlign.CENTER,
+                                    width=self.page.width - 80,
+                                    visible=False
+                                ),
+
+                                Evaluation := FletApp(
+                                    on_error=lambda e: print(e.data),
+                                    expand=True,
+                                    visible=False
+                                )
+                            ],
+                            alignment=MainAxisAlignment.CENTER,
+                            horizontal_alignment=CrossAxisAlignment.CENTER
+                        ),
+                        alignment=alignment.center,
+                        bgcolor=colors.WHITE,
+                        expand=True
+                    )
+                ],
+                
+                appbar= AppBar(
+                    leading=IconButton(
+                        icons.ARROW_BACK_ROUNDED,
+                        on_click=lambda e: self.page.show_dialog(self.page.dialog)
+                    ),
+                    title=Text("Evalution"),
+                    center_title=True,
+                    actions=[
+                        IconButton(icons.HELP_OUTLINE)
+                    ],
+                    elevation=0,
+                    bgcolor=colors.BLUE_400
+                ),
+
+                floating_action_button=FloatingActionButton(
+                    content=PopupMenuButton(
+                        Icon(
+                            icons.CALCULATE_OUTLINED , #HOME_ROUNDED, #CONSTRUCTION_OUTLINED
+                            colors.WHITE,
+                            size=30
+                        ),
+                        items=[
+                            PopupMenuItem(
+                                "Calculatrice",
+                                icons.CALCULATE_OUTLINED,
+                            ),
+                            PopupMenuItem(
+                                "Document",
+                                icons.MY_LIBRARY_BOOKS_OUTLINED
+                            ),
+                            PopupMenuItem(
+                                "Message",
+                                icons.MESSAGE_OUTLINED
+                            ),
+                            PopupMenuItem(
+                                "Aide",
+                                icons.HELP_OUTLINE
+                            )
+                        ]
+                    ),
+                    bgcolor=colors.BLUE_400
+                ),
+                
+                floating_action_button_location=FloatingActionButtonLocation.END_FLOAT,
+                padding=0,
+            )
+        )
+        
+        self.page.dialog = AlertDialog(
+            False,
+            Text("Fermeture"),
+            Text("Souhaitez-vous vraiment vous quitter ?"),
+            [
+                Row(
+                    [
+                        FilledButton(
+                            "Non",
+                            on_click=lambda e: self.page.close_dialog()
+                        ),
+                        OutlinedButton(
+                            "Oui",
+                            on_click=lambda e: (self.page.close_dialog(), (self.page.overlay.clear(), self.page.update()) if self.page.overlay else self.on_view_pop(None))
+                        )
+                    ],
+                    alignment=MainAxisAlignment.SPACE_EVENLY
+                    )
+            ]
+        )
+
+        self.text = text
+        Thread(target=recherche()).start()
+
+        self.page.update()
 
     def on_keyboard_event(self, event: KeyboardEvent):
         print(f"Key: {event.key}")
@@ -624,4 +920,4 @@ class Main:
             self.__init__(self.page)
 
 
-app(Main, port=80, host="localhost", view=AppView.FLET_APP_WEB)
+app(Main, port=80, host="192.168.173.1", view=AppView.FLET_APP_WEB)
