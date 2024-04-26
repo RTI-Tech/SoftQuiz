@@ -1,6 +1,6 @@
 from socket import AF_INET, SOCK_DGRAM, getaddrinfo, socket
 from threading import Event, Timer
-from time import time as now, localtime, strftime, strptime
+from time import sleep, time as now, localtime, strftime, strptime
 from datetime import time
 from flet import*
 
@@ -15,6 +15,8 @@ class Main:
 
         if not instances and not page.web and page.client_ip in (addr, addr_p) and page.platform not in (PagePlatform.ANDROID, PagePlatform.IOS):
             instances.insert(0, self)
+
+            page.on_window_event = lambda e: t[1].set() if e.data == "close" else None 
 
             page.window_left = 0
             page.window_min_width = 900
@@ -351,8 +353,8 @@ class Main:
                                             f := FilledButton(
                                                 " Démarrer ",
                                                 on_click=lambda e: (
-                                                    (deb.__setattr__("text", strftime("%Hh %Mm %Ss", localtime())),
-                                                    fin.__setattr__("text", strftime("%Hh %Mm %Ss", localtime(now()+t[2]))),
+                                                    (deb.__setattr__("text", strftime("%H:%M", localtime())),
+                                                    fin.__setattr__("text", strftime("%H:%M", localtime(now()+t[2]))),
                                                     ret.__setattr__("visible", False), t.__setitem__(3, now()), f.__setattr__("text", " Arrêter "),
                                                     t[1].set(), page.update())  if f.text == " Démarrer " else page.show_dialog(AlertDialog(
                                                         False,
@@ -402,9 +404,21 @@ class Main:
                 Container(
                     Column(
                         [
-                            Text(f"EVALUATION : {t[-1]}", weight=FontWeight.BOLD, size=20),
-                            Text('En attente du lancement ...'),
-                            ProgressRing()
+                            Text(f"EVALUATION : {t[-1]}", theme_style=TextThemeStyle.TITLE_LARGE),
+                            Text(f"Durée : {strftime('%Hh %Mm %Ss', localtime(t[2]))}", theme_style=TextThemeStyle.TITLE_MEDIUM),
+                            Container(
+                                Image(
+                                    "code_QR.png",
+                                    fit=ImageFit.CONTAIN,
+                                    height=100
+                                    ),
+                                    bgcolor=colors.GREY_100,
+                                    padding=10,
+                                    border_radius=10,
+                                    border=border.all(1, colors.GREY)
+                            ),
+                            Icon(icons.INFO_OUTLINE, color='blue'),
+                            Text('Le surveillant doit scanner votre code QR pour vous autoriser', text_align=TextAlign.CENTER, theme_style=TextThemeStyle.TITLE_MEDIUM, color='blue', width=300)
                         ],
                         alignment=MainAxisAlignment.CENTER,
                         horizontal_alignment=CrossAxisAlignment.CENTER
@@ -414,12 +428,109 @@ class Main:
                     visible=False if page.controls else True
                 )
             )
+            
+            def state_change(state):
+                debut=now()
+                def anim():
+                    if p.value > 0:
+                        p.value = 1 - ((now() - debut) / 10)
+                        text.text = f"{round(10 - (now()-debut))}s"
+                        page.update()
+                        sleep(0.01)
+                        anim()
+
+                if state == AppLifecycleState.INACTIVE:
+                    page.show_dialog(AlertDialog(
+                        True,
+                        title=Text("Alert"),
+                        content=Column(
+                            [
+                                Row(
+                                    [
+                                        Icon(
+                                            icons.WARNING,
+                                            colors.RED,
+                                            30
+                                        ),
+                                        Text(
+                                            "Revenez dans l'évaluation, avant qu'elle soit fermée !",
+                                            width=200,
+                                            color=colors.RED_500,
+                                            size=16
+                                        )
+                                    ]
+                                ),
+                                Stack(
+                                    [
+                                        p := ProgressRing(
+                                            value=1,
+                                            stroke_width=5,
+                                            color=colors.RED,
+                                            bgcolor=colors.WHITE,
+                                            width=50,
+                                            height=50
+                                        ),
+                                        text := TextButton(
+                                            "10s",
+                                            width=50,
+                                            height=50
+                                        )
+                                    ]
+                                )
+                            ],
+                            horizontal_alignment=CrossAxisAlignment.CENTER,
+                            spacing=30,
+                            tight=True
+                        ),
+                    ))
+
+                    anim()
+
+                elif state == AppLifecycleState.RESUME:
+                    sleep(1)
+                    page.close_dialog()
+                    page.show_dialog(AlertDialog(
+                        title=Text("Alert"),
+                        content=Column(
+                            [
+                                Row(
+                                    [
+                                        Icon(
+                                            icons.WARNING,
+                                            colors.RED,
+                                            30
+                                        ),
+                                        Text(
+                                            "Vous risquez de ne plus continuer l'évaluation si vous quitter encore !",
+                                            width=200,
+                                            color=colors.RED_500,
+                                            size=16
+                                        )
+                                    ]
+                                )
+                            ],
+                            horizontal_alignment=CrossAxisAlignment.CENTER,
+                            spacing=30,
+                            tight=True
+                        ),
+                        actions=[Row(
+                            [
+                                FilledButton(
+                                    "OK",
+                                    on_click=lambda e: self.page.close_dialog()
+                                )
+                            ],
+                            alignment=MainAxisAlignment.CENTER
+                        )]
+                    ))
 
             None if instances and self == instances[0] else t[1].wait()
-            
+            page.on_app_lifecycle_state_change = None if self == instances[0] else lambda e: (print(page.client_storage.get("identifiants")["matricule"], ":", e.state), state_change(e.state))
+
             page.controls.pop()
             None if self == instances[0] else instances.append(self)
             page.fini = False
+
 
             def delay():
                 t[1].wait()
@@ -806,13 +917,13 @@ class Main:
             t[0].text = len(instances) - 1
             instances[0].page.update()
 
-            page.on_disconnect = lambda e: (instances.remove(self), t[0].__setattr__("text", len(instances) - 1), t[5].__setattr__("text", int(t[5].text) + 1), instances[0].page.update())
+            page.on_disconnect = None if self == instances[0] else lambda e: (instances.remove(self), t[0].__setattr__("text", len(instances) - 1), t[5].__setattr__("text", int(t[5].text) + 1), instances[0].page.update())
             page.on_connect = lambda e: (instances.append(self), t[0].__setattr__("text", len(instances) - 1), instances[0].page.update())
             
         page.update()
 
 if __name__ == "__main__":
-    Adresses = [addr[-1][0] for addr in getaddrinfo('', 80, AF_INET) if addr[-1][0].startswith("192")]
+    Adresses = [addr[-1][0] for addr in getaddrinfo('', 80, AF_INET) if addr[-1][0]]
     Adresses.sort(reverse=True)
 
     print(Adresses)
@@ -822,9 +933,9 @@ if __name__ == "__main__":
     s = socket(type=SOCK_DGRAM)
 
     try:  s.connect(("8.8.8.8", 81))
-    except: print("\x1b[31mVous n'êtes pas connectés à un réseau extérieur\x1b[0m")
-    else: addr_p = s.getsockname()[0]
-
+    except: print("\x1b[31mVous n'êtes pas connectés à un réseau extérieur.\x1b[0m")
+    else: addr = addr_p = s.getsockname()[0] if s.getsockname()[0] in Adresses else ""
+    
     if not addr_p.startswith("192"):
         for addr in Adresses:
             try:
@@ -837,9 +948,10 @@ if __name__ == "__main__":
 
         if addr != "127.0.0.1" or (addr == "127.0.0.1" and not addr_p):
             print("\x1b[32mUtilisation du réseau local :\x1b[0m", addr)
-            print("\x1b[33mIl ne se peut qu'il ne soit visible que par votre ordinateur.\x1b[0m")
+            print("\x1b[33mIl se peut qu'il ne soit visible que par votre ordinateur.\x1b[0m")
         
         else:
+            addr = addr_p
             print("\x1b[32mUtilisation du réseau publique :\x1b[0m", s.getsockname())
             print("\x1b[33mWarrning : Ce réseau peut toute fois être indisponible pour les autres, préferé un point d'accès (routeur).\x1b[0m")
 

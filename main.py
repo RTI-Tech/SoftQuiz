@@ -5,6 +5,8 @@ from random import randint, sample
 from time import sleep
 from flet import*
 
+from calculator import CalculatorApp
+
 class Main:
     def __init__(self, page: Page):
         self.page = page
@@ -22,7 +24,7 @@ class Main:
 
         # Le thème de l'application
         page.theme = Theme(
-            color_scheme_seed=colors.BLUE_400
+            color_scheme_seed=colors.BLUE
         )
 
         page.theme_mode = ThemeMode.LIGHT
@@ -76,19 +78,20 @@ class Main:
             src="SoftQuiz_logo.png",
             error_content=Icon(icons.ERROR, colors.RED, 60),
             opacity=0,
-            scale=0,
+            scale=1.2,
             offset=Offset(0, -0.2),
-            animate_scale=500,
+            animate_opacity=1000,
+            animate_scale=800
         )
 
         self.anim_text = Text(
-            "Pour une une gestion optimale de vos évalutions",
+            "Pour une une gestion optimale des cours",
             #font_family="Times",
             #theme_style=TextThemeStyle.TITLE_MEDIUM,
             text_align=TextAlign.CENTER,
             opacity=0,
-            offset=Offset(0, -1),
-            animate_opacity=1000
+            offset=Offset(0, -1.5),
+            animate_opacity=200
         )
 
         self.anim_progress = ProgressRing(
@@ -128,7 +131,7 @@ class Main:
         # -----------      Animation     ------------------
         sleep(0.5)
         self.anim_image.opacity = 1
-        self.anim_image.scale = 0.9
+        self.anim_image.scale = 0.8
 
         self.Main_container.gradient = RadialGradient(
                                                     colors=[
@@ -138,9 +141,10 @@ class Main:
                                                     radius=0.7,
                                                     center=Alignment(0, -0.1)
                                                 )
+        
         self.page.update()
 
-        sleep(1)
+        sleep(1.5)
         self.anim_text.opacity = 1
         self.page.update()
 
@@ -387,6 +391,120 @@ class Main:
                             Text("Accueil")
                         ]
                     ),
+                    
+                    content=Container(
+                        Column(
+                            [
+                                Card(
+                                    Column(
+                                        [
+                                            ListTile(
+                                                leading=Container(
+                                                    Image("profil.jpg",
+                                                        fit=ImageFit.CONTAIN,
+                                                        gapless_playback=True,
+                                                        color='grey200',
+                                                        color_blend_mode=BlendMode.MODULATE,
+                                                        height=70
+                                                    ),
+                                                    border_radius=30
+                                                ) if False else Icon(icons.ACCOUNT_CIRCLE_ROUNDED, size=70),
+                                                title=Text("Adonis Rwabira"),
+                                                subtitle=Text("19314")
+                                            ),
+
+                                            Container(
+                                                Column(
+                                                    [
+                                                        Text(
+                                                            "ULPGL Technologie L2 GEI",
+                                                            theme_style=TextThemeStyle.BODY_MEDIUM
+                                                        ),
+                                                        Text(
+                                                            "2023-2024",
+                                                            theme_style=TextThemeStyle.BODY_SMALL
+                                                        )
+                                                    ],
+                                                    horizontal_alignment=CrossAxisAlignment.CENTER,
+                                                    spacing=5
+                                                ),
+                                                padding=padding.only(top=10),
+                                                alignment=alignment.center
+                                            ),
+                                            
+                                            Row(
+                                                [
+                                                    IconButton(icons.QR_CODE_OUTLINED),
+                                                    IconButton(icons.MANAGE_ACCOUNTS)
+                                                ],
+                                                alignment=MainAxisAlignment.END,
+                                                spacing=0
+                                            )
+                                        ],
+                                        alignment=MainAxisAlignment.SPACE_BETWEEN
+                                    ),
+                                    margin=Margin(10, 25, 10, 10),
+                                    shape=RoundedRectangleBorder(radius=15),
+                                    elevation=5
+                                ),
+                                
+                                ExpansionTile(
+                                    title=Text("Messages"),
+                                    leading=Icon(icons.MESSAGE_ROUNDED),
+                                    shape=RoundedRectangleBorder(),
+                                    bgcolor=colors.SURFACE,
+                                    tile_padding=padding.symmetric(0, 30),
+                                    controls=[
+                                        Text("Pas d'evenements")
+                                    ]
+                                ),
+                                
+                                ExpansionTile(
+                                    title=Text("Evenements"),
+                                    leading=Icon(icons.EVENT_AVAILABLE_ROUNDED),
+                                    shape=RoundedRectangleBorder(),
+                                    bgcolor=colors.SURFACE,
+                                    tile_padding=padding.symmetric(0, 30),
+                                    controls=[
+                                        Text("Pas d'evenements")
+                                    ]
+                                ),
+                                
+                                ExpansionTile(
+                                    title=Text("Récents"),
+                                    leading=Icon(icons.HISTORY_OUTLINED),
+                                    shape=RoundedRectangleBorder(),
+                                    bgcolor=colors.SURFACE,
+                                    tile_padding=padding.symmetric(0, 30),
+                                    controls=[
+                                        Text("Pas d'evenements")
+                                    ]
+                                ),
+                                
+                                ExpansionTile(
+                                    title=Text("Statistiques"),
+                                    leading=Icon(icons.AREA_CHART_OUTLINED),
+                                    shape=RoundedRectangleBorder(),
+                                    bgcolor=colors.SURFACE,
+                                    tile_padding=padding.symmetric(0, 30),
+                                    controls=[
+                                        Text("Pas d'evenements")
+                                    ]
+                                )
+                            ],
+                            scroll=ScrollMode.ADAPTIVE
+                        ),
+                        bgcolor=colors.ON_SECONDARY
+                    )
+                ),
+                
+                Tab(
+                    tab_content=Row(
+                        [    
+                            Icon(icons.COLLECTIONS_BOOKMARK_ROUNDED),
+                            Text("Cours")
+                        ]
+                    ),
                     content=Container(    
                         Column(
                             [   
@@ -407,15 +525,15 @@ class Main:
                                                             spacing=0
                                                         ),
                                                         height=150,
-                                                        border_radius=border_radius.vertical(0, 40),
+                                                        border_radius=border_radius.vertical(15, 10),
                                                         padding=5,
-                                                        bgcolor=colors.WHITE,
-                                                        border=border.only(top=BorderSide(1, colors.GREY))
+                                                        bgcolor=color+"100",
+                                                        #border=border.only(top=BorderSide(1, colors.GREY))
                                                     ),
                                                 ],
 
                                                 leading=IconButton(icons.MORE_VERT_ROUNDED),
-                                                tile_padding=padding.only(right=20),
+                                                tile_padding=padding.only(left=10, right=20),
                                                 title=Row(
                                                     [
                                                         Text(cours),
@@ -431,32 +549,21 @@ class Main:
                                                 shape=RoundedRectangleBorder(),
                                                 icon_color=colors.BLACK,
                                                 initially_expanded=True,
-                                                #maintain_state=True
+                                                maintain_state=True if self.page.width > 700 else False
                                             ),
-                                        bgcolor=color,
-                                        border=border.all(1, colors.GREY_500),
-                                        border_radius=40,
+                                        bgcolor=color+"200",
+                                        #border=border.all(1, colors.GREY_500),
+                                        border_radius=10,
                                         col={"sm":6, "lg":4, "xxl":3}
-                                        ) for cours, color in zip(("Physique", "Algèbre", "Algorithme", "Java", "Trigonométrie"), sample([color for color in list(colors.__dict__.values())[9:] if color.endswith("100")], k=5))
-                                    ],
-                                    columns=12
+                                        ) for cours, color in zip(("Physique", "Algèbre", "Algorithme", "Java", "Trigonométrie"), sample(["blue", "indigo", "purple", "green", "orange", "lightblue", "deeppurple", "cyan", "lightgreen"], k=5)) #[color for color in list(colors.__dict__.values())[9:] if color.endswith("100")]
+                                    ]
                                 )
                             ],
                             scroll=ScrollMode.ADAPTIVE
                         ),
-                        bgcolor=colors.WHITE,
-                        padding=padding.symmetric(15, 10)
+                        bgcolor=colors.ON_SECONDARY,
+                        padding=padding.only(10, 20, 10)
                     )
-                ),
-                
-                Tab(
-                    tab_content=Row(
-                        [    
-                            Icon(icons.COLLECTIONS_BOOKMARK_ROUNDED),
-                            Text("Cours")
-                        ]
-                    ),
-                    content=Container(bgcolor=colors.WHITE)
                 ),
                 
                 Tab(
@@ -529,24 +636,28 @@ class Main:
                                     Column(
                                         [
                                             ListTile(padding.only(left=10), leading=Icon(icons.MANAGE_ACCOUNTS_ROUNDED), title=Text("Paramètres"), trailing=Icon(icons.ARROW_FORWARD_IOS)),
-                                            ListTile(padding.only(left=10), leading=Icon(icons.HISTORY_ROUNDED), title=Text("Hitorique"), trailing=Icon(icons.ARROW_FORWARD_IOS)),
+                                            ListTile(padding.only(left=10), leading=Icon(icons.HISTORY_ROUNDED), title=Text("Historique"), trailing=Icon(icons.ARROW_FORWARD_IOS)),
                                             ListTile(padding.only(left=10), leading=Icon(icons.SETTINGS_APPLICATIONS_ROUNDED), title=Text("Parametres"), trailing=Icon(icons.ARROW_FORWARD_IOS)),
                                             ListTile(padding.only(left=10), leading=Icon(icons.LOGOUT_ROUNDED), title=Text("Déconnection"), trailing=Icon(icons.ARROW_FORWARD_IOS))
-                                        ]
+                                        ],
+                                        scroll=ScrollMode.ADAPTIVE
                                     ),
                                     padding=padding.symmetric(10, 20)
                                 )
                             ]
                         ),
-                        bgcolor=colors.BLUE_50
+                        bgcolor=colors.ON_SECONDARY
                     )
                 ),
             ],
+            animation_duration=100,
             tab_alignment=TabAlignment.CENTER,
             indicator_color=colors.TRANSPARENT,
-            label_color=colors.BLACK,
-            unselected_label_color=colors.WHITE70,
-            divider_color=colors.BLUE_400,
+            label_color=colors.TRANSPARENT,
+            unselected_label_color=colors.TRANSPARENT,
+            divider_color=colors.TRANSPARENT,
+            offset=Offset(0, -0.1),
+            on_change=lambda e: (self.page.views[-1].appbar.__setattr__("bgcolor", colors.BLUE_400 if e.data == "2" else colors.BLUE_300), self.page.views[-1].controls[0].controls[1].__setattr__("bgcolor", colors.BLUE_400 if e.data == "2" else colors.BLUE_300), self.page.update()),
             expand=True
         )
 
@@ -556,35 +667,162 @@ class Main:
             View(
                 "Accueil",
                 [
-                    Container(
-                        self.Home_Page,
-                        bgcolor=colors.BLUE_400,
+                    Row(
+                        [   
+                            Container(
+                                Column(
+                                    [
+                                        nav := NavigationRail(
+                                            [
+                                                NavigationRailDestination(
+                                                    label="Accueil",
+                                                    icon=icons.HOME_ROUNDED
+                                                ),
+                                                
+                                                NavigationRailDestination(
+                                                    label="Cours",
+                                                    icon=icons.COLLECTIONS_BOOKMARK_ROUNDED
+                                                ),
+                                                
+                                                NavigationRailDestination(
+                                                    label="Compte",
+                                                    icon=icons.ACCOUNT_CIRCLE_ROUNDED
+                                                ),
+
+                                                NavigationRailDestination(),
+
+                                                NavigationRailDestination(
+                                                    label="Parametres",
+                                                    icon=icons.SETTINGS_ROUNDED
+                                                ),
+
+                                                NavigationRailDestination(
+                                                    label="A prpos",
+                                                    icon=icons.INFO_OUTLINE_ROUNDED
+                                                ),
+
+                                                NavigationRailDestination(),
+
+                                                NavigationRailDestination(
+                                                    label="Déconnexion",
+                                                    icon=icons.LOGOUT_ROUNDED
+                                                ),
+
+                                                NavigationRailDestination(
+                                                    label="Quitter",
+                                                    icon=icons.POWER_SETTINGS_NEW_ROUNDED
+                                                ),
+
+                                                NavigationRailDestination(
+                                                    label="Réduire",
+                                                    icon=icons.ARROW_BACK_IOS_NEW_ROUNDED
+                                                )
+                                            ],
+                                            extended=True,
+                                            expand=True,
+                                            selected_index=0,
+                                            min_extended_width=200,
+                                            label_type=NavigationRailLabelType.SELECTED,
+                                            trailing=TextButton("v1.0.0"),
+                                            bgcolor=colors.ON_SECONDARY,
+                                            on_change=lambda e: (self.Home_Page.__setattr__("selected_index", e.data) if int(e.data) <= 3 else None, self.page.update())
+                                        )
+                                    ]
+                                ),
+                                border=border.only(right=BorderSide(1, colors.OUTLINE_VARIANT)),
+                                visible=True if self.page.width >= 700 else False
+                            ),
+
+                            self.Home_Page
+                        ],
                         expand=True
                     )
                 ],
                 
                 appbar= AppBar(
-                    leading=IconButton(icons.MENU_ROUNDED, on_click=lambda e: self.page.show_drawer(self.page.views[-1].drawer)),
+                    leading=IconButton(
+                        icons.MENU_ROUNDED,
+                        selected_icon=icons.KEYBOARD_DOUBLE_ARROW_LEFT_ROUNDED,
+                        selected=False if self.page.width <= 700 else True,
+                        animate_rotation=300,
+                        rotate=Rotate(0),
+                        on_click=lambda e: self.page.show_drawer(self.page.views[-1].drawer) if self.page.width <= 700 else
+                            (e.control.__setattr__("selected", not e.control.selected), e.control.rotate.__setattr__("angle", e.control.rotate.angle + 6.28), nav.__setattr__("extended", e.control.selected), self.page.update())
+                    ),
                     title=Text("SoftQuiz"),
-                    center_title=True,
+                    center_title=True if self.page.width <= 700 else False,
                     actions=[
-                        IconButton(icons.SEARCH_ROUNDED),
-                        IconButton(
-                            icons.BRIGHTNESS_6_OUTLINED,
-                            selected_icon=icons.BRIGHTNESS_6,
-                            selected=self.page.theme_mode == ThemeMode.DARK,
-                            on_click=lambda e: (
-                                (self.page.__setattr__("theme_mode", ThemeMode.LIGHT), e.control.__setattr__("selected", False)) if self.page.theme_mode == ThemeMode.DARK
-                                else (self.page.__setattr__("theme_mode", ThemeMode.DARK), e.control.__setattr__("selected", True)),
-                                self.page.update()
-                            )
-                        ),
-                        #IconButton(icons.MORE_VERT_SHARP)
+                        IconButton(icons.QR_CODE_SCANNER_OUTLINED),
+                        SubmenuButton(
+                            leading=Icon(icons.MORE_VERT_SHARP),
+                            controls=[
+                                MenuItemButton(
+                                    leading= IconButton(
+                                        icons.SEARCH_OUTLINED
+                                    ),
+                                    content=Text("Recherche"),
+                                    style=ButtonStyle(color=colors.BLACK),
+                                    on_click=lambda e: ...,
+                                    close_on_click=True
+                                ),
+                                MenuItemButton(
+                                    leading=IconButton(
+                                        icons.BRIGHTNESS_6_OUTLINED,
+                                        selected_icon=icons.BRIGHTNESS_6,
+                                        selected=self.page.theme_mode == ThemeMode.DARK,
+                                        on_click=lambda e: (
+                                            (self.page.__setattr__("theme_mode", ThemeMode.LIGHT), e.control.__setattr__("selected", False)) if self.page.theme_mode == ThemeMode.DARK
+                                            else (self.page.__setattr__("theme_mode", ThemeMode.DARK), e.control.__setattr__("selected", True)),
+                                            self.page.update()
+                                        )
+                                    ),
+                                    content=Text("Dark Mode" if self.page.theme_mode == ThemeMode.LIGHT else "Light Mode"),
+                                    style=ButtonStyle(color=colors.BLACK),
+                                    on_click=lambda e: ((e.control.content.__setattr__("value", "Dark Mode"), self.page.__setattr__("theme_mode", ThemeMode.LIGHT), e.control.leading.__setattr__("selected", False)) if self.page.theme_mode == ThemeMode.DARK
+                                            else (e.control.content.__setattr__("value", "Light Mode"), self.page.__setattr__("theme_mode", ThemeMode.DARK), e.control.leading.__setattr__("selected", True)),
+                                            self.page.update()
+                                        ),
+                                    close_on_click=True
+                                ),
+                                MenuItemButton(
+                                    leading=IconButton(
+                                        icons.SETTINGS_OUTLINED
+                                    ),
+                                    content=Text("Paramètres"),
+                                    style=ButtonStyle(color=colors.BLACK),
+                                    on_click=lambda e: ...,
+                                    close_on_click=True
+                                ),
+                                MenuItemButton(
+                                    leading=IconButton(
+                                        icons.BUG_REPORT_OUTLINED
+                                    ),
+                                    content=Text("Signaler un bug"),
+                                    style=ButtonStyle(color=colors.BLACK),
+                                    on_click=lambda e: ...,
+                                    close_on_click=True
+                                ),
+                                MenuItemButton(
+                                    leading=IconButton(
+                                        icons.LIVE_HELP_OUTLINED
+                                    ),
+                                    content=Text("Aide"),
+                                    style=ButtonStyle(color=colors.BLACK),
+                                    on_click=lambda e: ...,
+                                    close_on_click=True
+                                )
+                            ],
+                            menu_style=MenuStyle(
+                                elevation=10,
+                                shape=BeveledRectangleBorder(radius=10)
+                            ),
+                            width=40,
+                            offset=Offset(-0.2, 0)
+                        )
                     ],
                     elevation=0,
-                    #color="red",
-                    #toolbar_height=40,
-                    bgcolor=colors.BLUE_400
+                    toolbar_height=80 if self.page.width <= 700 else 70,
+                    bgcolor=colors.BLUE_300
                 ),
                 
                 bottom_appbar=BottomAppBar(
@@ -595,19 +833,18 @@ class Main:
                     content=Container(
                         Row(
                             [
-                                Column([selected := IconButton(icons.HOME_ROUNDED, icon_color=colors.BLACK, bgcolor=colors.WHITE, on_click=lambda e: (self.selected.__setattr__("bgcolor", colors.TRANSPARENT), e.control.__setattr__("bgcolor", colors.WHITE), self.__setattr__("selected", e.control), self.Home_Page.__setattr__("selected_index", 0), self.page.update())), Text("Accueil")], horizontal_alignment=CrossAxisAlignment.CENTER, spacing=0, expand=2),
-                                Column([IconButton(icon=icons.SCHOOL, icon_color=colors.BLACK, on_click=lambda e: (self.selected.__setattr__("bgcolor", colors.TRANSPARENT), e.control.__setattr__("bgcolor", colors.WHITE), self.__setattr__("selected", e.control), self.Home_Page.__setattr__("selected_index", 1), self.page.update())), Text("Cours")], horizontal_alignment=CrossAxisAlignment.CENTER, spacing=0, expand=2),
-                                Column([Icon(icons.MORE_VERT_ROUNDED)], alignment=MainAxisAlignment.END, horizontal_alignment=CrossAxisAlignment.CENTER, expand=2, opacity=1),
-                                Column([IconButton(icon=icons.ACCOUNT_BOX_ROUNDED, icon_color=colors.BLACK, on_click=lambda e: (self.selected.__setattr__("bgcolor", colors.TRANSPARENT), e.control.__setattr__("bgcolor", colors.WHITE), self.__setattr__("selected", e.control), self.Home_Page.__setattr__("selected_index", 2), self.page.update())), Text("Compte")], horizontal_alignment=CrossAxisAlignment.CENTER, spacing=0, expand=2),
-                                Column([IconButton(icon=icons.SETTINGS_ROUNDED, icon_color=colors.BLACK, on_click=lambda e: (self.selected.__setattr__("bgcolor", colors.TRANSPARENT), e.control.__setattr__("bgcolor", colors.WHITE), self.__setattr__("selected", e.control), self.page.update())), Text("Options")], horizontal_alignment=CrossAxisAlignment.CENTER, spacing=0, expand=2),
+                                Column([selected := IconButton(icons.HOME_ROUNDED, icon_color=colors.BLACK, bgcolor=colors.BLUE_50, on_click=lambda e: (self.selected.__setattr__("bgcolor", colors.TRANSPARENT), e.control.__setattr__("bgcolor", colors.WHITE), self.__setattr__("selected", e.control), self.Home_Page.__setattr__("selected_index", 0), self.page.update())), Text("Accueil")], horizontal_alignment=CrossAxisAlignment.CENTER, spacing=0, expand=2),
+                                Column([IconButton(icon=icons.COLLECTIONS_BOOKMARK_OUTLINED, icon_color=colors.BLACK, on_click=lambda e: (self.selected.__setattr__("bgcolor", colors.TRANSPARENT), e.control.__setattr__("bgcolor", colors.WHITE), self.__setattr__("selected", e.control), self.Home_Page.__setattr__("selected_index", 1), self.page.update())), Text("Cours")], horizontal_alignment=CrossAxisAlignment.CENTER, spacing=0, expand=2),
+                                Column([Icon(icons.SWIPE_UP_ALT_OUTLINED, opacity=0)], alignment=MainAxisAlignment.END, horizontal_alignment=CrossAxisAlignment.CENTER, expand=2, opacity=1),
+                                Column([IconButton(icon=icons.SUPERVISOR_ACCOUNT_OUTLINED, icon_color=colors.BLACK, on_click=lambda e: (self.selected.__setattr__("bgcolor", colors.TRANSPARENT), e.control.__setattr__("bgcolor", colors.WHITE), self.__setattr__("selected", e.control), self.Home_Page.__setattr__("selected_index", 2), self.page.update())), Text("Compte")], horizontal_alignment=CrossAxisAlignment.CENTER, spacing=0, expand=2),
+                                Column([IconButton(icon=icons.SETTINGS_OUTLINED, icon_color=colors.BLACK, on_click=lambda e: (self.selected.__setattr__("bgcolor", colors.TRANSPARENT), e.control.__setattr__("bgcolor", colors.WHITE), self.__setattr__("selected", e.control), self.page.update())), Text("Options")], horizontal_alignment=CrossAxisAlignment.CENTER, spacing=0, expand=2),
                             ],
                             alignment=MainAxisAlignment.SPACE_AROUND,
                             spacing = 10
-                        ),
-                        padding=padding.symmetric(10)
+                        )
                     ),
-                    height=100,
-                    visible=False
+                    height=90,
+                    visible=True if self.page.width <= 700 else False
                 ),
 
                 drawer = NavigationDrawer(
@@ -656,30 +893,38 @@ class Main:
                             icons.INFO_OUTLINE_ROUNDED
                         ),
 
-                        Divider(thickness=1),
+                        Divider(opacity=0 if self.page.height - 610 > 0 else 1),
 
-                        Container(height=self.page.height - 630),
+                        Container(height=self.page.height - 610),
 
-                        NavigationDrawerDestination(
-                            "Déconnexion",
-                            icons.LOGOUT_ROUNDED
-                        ),
+                        Container(
+                            Column(
+                                [
+                                    TextButton(
+                                        "Déconnexion",
+                                        icons.LOGOUT_ROUNDED
+                                    ),
 
-                        NavigationDrawerDestination(
-                            "Quitter",
-                            icons.POWER_SETTINGS_NEW_ROUNDED
-                        ),
+                                    TextButton(
+                                        "Quitter",
+                                        icons.POWER_SETTINGS_NEW_ROUNDED
+                                    ),
 
-                        NavigationDrawerDestination(
-                            "Réduire",
-                            icons.ARROW_BACK_IOS_NEW_ROUNDED
+                                    TextButton(
+                                        "Réduire",
+                                        icons.ARROW_BACK_IOS_OUTLINED
+                                    )
+                                ],
+                                spacing=5
+                            ),
+                            padding=padding.only(left=20)
                         ),
 
                         TextButton("v1.0.0"),
                     ],
                     on_change=lambda e: (self.page.show_dialog(self.page.dialog) if e.data == "5" else
                                          self.page.close_drawer() if e.data == "7" else None)
-                ),
+                ) if self.page.width <= 700 else None,
 
                 floating_action_button=FloatingActionButton(
                     content=PopupMenuButton(
@@ -716,10 +961,11 @@ class Main:
                             )
                         ]
                     ),
-                    bgcolor=colors.BLUE_400
+                    bgcolor=colors.BLUE_300
                 ),
                 
-                floating_action_button_location=FloatingActionButtonLocation.END_FLOAT,
+                floating_action_button_location=FloatingActionButtonLocation.CENTER_DOCKED if self.page.width <= 700 else FloatingActionButtonLocation.END_FLOAT,
+                bgcolor=colors.ON_SECONDARY,
                 padding=0,
             )
         )
@@ -737,7 +983,7 @@ class Main:
                         OutlinedButton("Oui", on_click=lambda e: (self.page.close_dialog(), self.page.views.pop(), self.page.client_storage.remove("identifiants"), self.page.go("Selection")))
                     ],
                     alignment=MainAxisAlignment.SPACE_EVENLY
-                    )
+                )
             ]
         )
 
@@ -757,7 +1003,7 @@ class Main:
 
             try:  s.connect(("8.8.8.8", 53))
             except Exception as e: print(e); self.text.visible = True; self.page.update()
-            else: self.text.visible = False; self.page.update()
+            else: self.text.visible = False; self.page.update(); Adresses.append(s.getsockname()[0])
 
             for addresse in Adresses:
                 tete, _, _ = addresse.rpartition(".")
@@ -852,22 +1098,24 @@ class Main:
                     elevation=0,
                     bgcolor=colors.BLUE_400
                 ),
-
+                
                 floating_action_button=FloatingActionButton(
                     content=PopupMenuButton(
                         Icon(
-                            icons.CALCULATE_OUTLINED , #HOME_ROUNDED, #CONSTRUCTION_OUTLINED
+                            icons.CONSTRUCTION_OUTLINED , #HOME_ROUNDED, #CALCULATE_OUTLINED
                             colors.WHITE,
-                            size=30
+                            size=26
                         ),
                         items=[
                             PopupMenuItem(
                                 "Calculatrice",
                                 icons.CALCULATE_OUTLINED,
+                                on_click=lambda e: self.page.show_bottom_sheet(self.page.bottom_sheet),
                             ),
                             PopupMenuItem(
                                 "Document",
-                                icons.MY_LIBRARY_BOOKS_OUTLINED
+                                icons.MY_LIBRARY_BOOKS_OUTLINED,
+                                on_click=lambda e: (self.page.views[-1].controls.append(self.page.overlay.pop()), self.page.update(), (self.page.go("Accueil")))
                             ),
                             PopupMenuItem(
                                 "Message",
@@ -890,7 +1138,10 @@ class Main:
         self.page.dialog = AlertDialog(
             False,
             Text("Fermeture"),
-            Text("Souhaitez-vous vraiment vous quitter ?"),
+            Text(
+                "Souhaitez-vous vraiment vous quitter ?",
+                text_align=TextAlign.CENTER
+            ),
             [
                 Row(
                     [
@@ -900,12 +1151,23 @@ class Main:
                         ),
                         OutlinedButton(
                             "Oui",
-                            on_click=lambda e: (self.page.close_dialog(), (self.page.overlay.clear(), self.page.update()) if self.page.overlay else self.on_view_pop(None))
+                            on_click=lambda e: (self.page.close_dialog(), self.page.overlay.clear(), self.on_view_pop(None))
                         )
                     ],
                     alignment=MainAxisAlignment.SPACE_EVENLY
-                    )
+                )
             ]
+        )
+        
+        self.page.bottom_sheet = BottomSheet(
+            CalculatorApp(),
+            #bgcolor=colors.BLACK87,
+            show_drag_handle=True,
+            use_safe_area=True,
+            #is_scroll_controlled=True,
+            dismissible=True,
+            enable_drag=True,
+            maintain_bottom_view_insets_padding=True
         )
 
         self.text = text
