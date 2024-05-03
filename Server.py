@@ -107,7 +107,7 @@ class Main:
                                                 "Continuer",
                                                 #icon=icons.RUN_CIRCLE_OUTLINED,
                                                 on_click=lambda e: (t.__setitem__(2, tim.value.hour*3600 + tim.value.minute*60 + tim.value.second),
-                                                    b.__setattr__("text", strftime("%Hh %Mm %Ss", strptime(tim.value.isoformat(), "%H:%M:%S"))),
+                                                    b.__setattr__("text", tim.value),
                                                     col.__setattr__("visible", False), t.__setitem__(-1, titv.value), tit.__setattr__("text", ": "+titv.value),
                                                     r.__setattr__("visible", True),
                                                     af.__setattr__("visible", True),
@@ -204,16 +204,6 @@ class Main:
                                                                 ],
                                                                 size=16
                                                             ),
-
-                                                            Text(
-                                                                "Restant : ",
-                                                                [
-                                                                    (b := TextSpan(
-                                                                            style=TextStyle(weight=FontWeight.BOLD),
-                                                                    ))
-                                                                ],
-                                                                size=16
-                                                            ),
                                                         ],
                                                         height=100,
                                                         alignment=MainAxisAlignment.SPACE_AROUND,
@@ -224,7 +214,7 @@ class Main:
                                                         [
                                                             Container(
                                                                 p := ProgressRing(
-                                                                    1,
+                                                                    0,
                                                                     10,
                                                                     width=100,
                                                                     height=100,
@@ -237,10 +227,12 @@ class Main:
                                                             ),
 
                                                             Container(
-                                                                a := Text(
-                                                                    "100%",
-                                                                    size=18,
-                                                                    weight=FontWeight.BOLD
+                                                                b := Text(
+                                                                    "Non demarré",
+                                                                    style=TextStyle(weight=FontWeight.BOLD),
+                                                                    text_align=TextAlign.CENTER,
+                                                                    size=16,
+                                                                    width=70
                                                                 ),
                                                                 alignment=alignment.center,
                                                                 top=11,
@@ -364,8 +356,9 @@ class Main:
                                                             Row(
                                                                 [   FilledButton("Non", on_click=lambda e: page.close_dialog()),
                                                                     ElevatedButton("Oui", on_click=lambda e: (deb.__setattr__("text", 0), fin.__setattr__("text", 0), b.__setattr__("text", 0),ret.__setattr__("visible", True),
-                                                                                                            t[1].clear(), t.__setitem__(3, 0), f.__setattr__("text", " Démarrer "), p.__setattr__("value", 1),
-                                                                                                            a.__setattr__("value", "100%"), af.__setattr__("visible", True), page.close_dialog(), page.update())
+                                                                                                            t[1].clear(), t.__setitem__(3, 0), f.__setattr__("text", " Démarrer "), p.__setattr__("value", 0),
+                                                                                                            b.__setattr__("value", "Non demarré"), #a.__setattr__("text", "100%"),
+                                                                                                            af.__setattr__("visible", True), page.close_dialog(), page.update())
                                                                     )
                                                                 ], alignment=MainAxisAlignment.SPACE_AROUND
                                                             )
@@ -405,7 +398,8 @@ class Main:
                     Column(
                         [
                             Text(f"EVALUATION : {t[-1]}", theme_style=TextThemeStyle.TITLE_LARGE),
-                            Text(f"Durée : {strftime('%Hh %Mm %Ss', localtime(t[2]))}", theme_style=TextThemeStyle.TITLE_MEDIUM),
+                            ((temps := localtime(t[2])) and None) or
+                            Text(f"Durée : {temps.tm_hour-2}h {temps.tm_min}m {temps.tm_sec}s", theme_style=TextThemeStyle.TITLE_MEDIUM),
                             Container(
                                 Image(
                                     "code_QR.png",
@@ -418,7 +412,7 @@ class Main:
                                     border=border.all(1, colors.GREY)
                             ),
                             Icon(icons.INFO_OUTLINE, color='blue'),
-                            Text('Le surveillant doit scanner votre code QR pour vous autoriser', text_align=TextAlign.CENTER, theme_style=TextThemeStyle.TITLE_MEDIUM, color='blue', width=300)
+                            Text('Le surveillant doit scanner ce code QR pour vous autoriser', text_align=TextAlign.CENTER, theme_style=TextThemeStyle.TITLE_MEDIUM, color='blue', width=300)
                         ],
                         alignment=MainAxisAlignment.CENTER,
                         horizontal_alignment=CrossAxisAlignment.CENTER
@@ -524,9 +518,9 @@ class Main:
                         )]
                     ))
 
-            None if instances and self == instances[0] else t[1].wait()
+            None if len(instances) and self.page == instances[0].page else t[1].wait()
             page.on_app_lifecycle_state_change = None if self == instances[0] else lambda e: (print(page.client_storage.get("identifiants")["matricule"], ":", e.state), state_change(e.state))
-
+            
             page.controls.pop()
             None if self == instances[0] else instances.append(self)
             page.fini = False
@@ -539,9 +533,9 @@ class Main:
                 if time_delta > 0 and not page.fini:
                     p.value = 1-((now() - t[3]) / t[2])
 
-                    if self == instances[0]: a.value = f"{round(p.value*100)}%"
+                    #if self == instances[0]: a.value = f"{round(p.value*100)}%"
 
-                    b.text = b.value = f"{time_delta // 3600}h {(time_delta % 3600) // 60}m {(time_delta % 3600) % 60}s"
+                    b.value = f"{time_delta // 3600}:{(time_delta % 3600) // 60}:{(time_delta % 3600) % 60}"
 
                     if p.value*100 > 90: p.color = colors.GREEN_400
                     elif p.value*100 > 80: p.color = colors.LIME_600
@@ -559,10 +553,10 @@ class Main:
                 
                 else:
                     p.value = 0
-                    b.text = b.value = "Terminé"
+                    b.value = "Terminé"
                     
                     if self == instances[0]:
-                        a.value = "0%"
+                        b.color = colors.GREEN
                         page.update()
                         return
                     

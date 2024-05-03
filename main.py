@@ -24,7 +24,17 @@ class Main:
 
         # Le thème de l'application
         page.theme = Theme(
-            color_scheme_seed=colors.BLUE
+            color_scheme_seed=colors.BLUE_900,
+            color_scheme=ColorScheme(
+                primary=colors.BLUE
+            )
+        )
+
+        page.dark_theme = Theme(
+            color_scheme_seed=colors.BLUE_900,
+            color_scheme=ColorScheme(
+                primary=colors.BLUE_900
+            )
         )
 
         page.theme_mode = ThemeMode.LIGHT
@@ -39,6 +49,7 @@ class Main:
             windows=PageTransitionTheme.CUPERTINO
         )
 
+
         # Pour les ordinateurs uniquement
         page.window_left = 960
         page.window_width = 400
@@ -48,9 +59,16 @@ class Main:
         # Pour les clics au clavier
         page.on_keyboard_event = self.on_keyboard_event
 
-        # Pour contrôler la vibration
+        # Pour contrôler le Retour de vibration (haptique)
         self.haptic = HapticFeedback()
-        page.overlay.append(self.haptic)
+
+        # Pour les fichiers
+        self.file_picker = FilePicker()
+
+        page.overlay.extend((self.haptic, self.file_picker))
+
+        # Indicateur de progrssion de la page
+        page.splash = ProgressBar(1, 2, colors.BLUE)
 
         # Aller à la page correspondante
         page.go(page.route)
@@ -80,8 +98,8 @@ class Main:
             opacity=0,
             scale=1.2,
             offset=Offset(0, -0.2),
-            animate_opacity=1000,
-            animate_scale=800
+            animate_opacity=400,
+            animate_scale=600
         )
 
         self.anim_text = Text(
@@ -97,6 +115,7 @@ class Main:
         self.anim_progress = ProgressRing(
             value=None,
             opacity=0,
+            color=colors.BLACK54,
             stroke_width=2,
             animate_opacity=500
         )
@@ -136,7 +155,7 @@ class Main:
         self.Main_container.gradient = RadialGradient(
                                                     colors=[
                                                         colors.BLUE_50,
-                                                        colors.BLUE_300
+                                                        colors.PRIMARY
                                                     ],
                                                     radius=0.7,
                                                     center=Alignment(0, -0.1)
@@ -144,7 +163,7 @@ class Main:
         
         self.page.update()
 
-        sleep(1.5)
+        sleep(1)
         self.anim_text.opacity = 1
         self.page.update()
 
@@ -167,56 +186,52 @@ class Main:
                 ),
                 
                 Container(
-                    Column(
+                    Row(
                         [
-                            Text(
-                                "Continuez en tant que",
-                                font_family="Times New Romans",
-                                theme_style=TextThemeStyle.TITLE_MEDIUM
-                            ),
+                            Column(
+                                [
+                                    Text(
+                                        "Qui êtes-vous ?",
+                                        font_family="Times New Romans",
+                                        theme_style=TextThemeStyle.BODY_LARGE
+                                    ),
 
-                            Divider(
-                                height=1,
-                                color=colors.TRANSPARENT
-                            ),
+                                    FilledTonalButton(
+                                        "Etudiant",
+                                        icons.ACCESSIBILITY_NEW_OUTLINED,
+                                        width=240,
+                                        height=55,
+                                        on_click=lambda e: (self.page.client_storage.set("user", "Etudiant"), self.page.go("Connection"))
+                                    ),
+                                    
+                                    FilledTonalButton(
+                                        "Professeur",
+                                        icons.SUPERVISOR_ACCOUNT_OUTLINED,
+                                        width=240,
+                                        height=55,
+                                        on_click=lambda e: (self.page.client_storage.set("user", "Professeur"), self.page.go("Connection"))
+                                    ),
 
-                            FilledTonalButton(
-                                " Université",
-                                icons.SCHOOL_ROUNDED,
-                                width=240,
-                                height=55,
-                                on_click=lambda e: (self.page.client_storage.set("user", "University"), self.page.go("Connection"))
-                            ),
-
-                            FilledTonalButton(
-                                "   Etudiant",
-                                icons.MAN_ROUNDED,
-                                width=240,
-                                height=55,
-                                on_click=lambda e: (self.page.client_storage.set("user", "Etudiant"), self.page.go("Connection"))
-                            ),
-                            
-                            FilledTonalButton(
-                                " Professeur",
-                                icons.SUPERVISOR_ACCOUNT,
-                                width=240,
-                                height=55,
-                                on_click=lambda e: (self.page.client_storage.set("user", "Professeur"), self.page.go("Connection"))
-                            ),
+                                    FilledTonalButton(
+                                        "Université",
+                                        icons.SCHOOL_OUTLINED,
+                                        width=240,
+                                        height=55,
+                                        on_click=lambda e: (self.page.client_storage.set("user", "University"), self.page.go("Connection"))
+                                    )
+                                ],
+                                spacing=20,
+                                expand=True,
+                                horizontal_alignment=CrossAxisAlignment.CENTER,
+                                scroll=ScrollMode.ADAPTIVE        
+                            )
                         ],
-    
-                        spacing=20,
-                        alignment=MainAxisAlignment.START,
-                        horizontal_alignment=CrossAxisAlignment.CENTER,
-                        scroll=ScrollMode.ADAPTIVE        
+                        vertical_alignment=CrossAxisAlignment.START
                     ),
-
-                    padding=padding.only(top=50),
+                    margin=margin.only(top=20),
+                    padding=padding.only(top=40),
                     bgcolor=colors.BLUE_50,
-                    border=border.all(1, colors.BLACK54),
                     border_radius=border_radius.vertical(30),
-                    alignment=alignment.top_center,
-                    shadow=BoxShadow(5, 10, colors.BLACK26),
                     expand=True
                 )
             ],
@@ -229,7 +244,7 @@ class Main:
             self.Choose_Page,
             gradient=RadialGradient(
                 colors=[colors.BLUE_50,
-                        colors.BLUE_300],
+                        colors.PRIMARY],
                 radius=0.7,
                 center=Alignment(0, -0.7)
             ),
@@ -253,127 +268,204 @@ class Main:
     def Page_Connection(self):
         if self.page.client_storage.contains_key("identifiants"): return self.page.go("Accueil")
 
-        self.Login_Page = Column(
-            [
-                Stack(
-                    [
-                        Container(
-                            Image(
-                                src="SoftQuiz_logo.png",
-                                error_content=Icon(icons.QUESTION_MARK_ROUNDED, colors.RED, 60),
-                                scale=0.8
-                            ),
-                            bgcolor=colors.LIGHT_BLUE_50,
-                            gradient=RadialGradient(colors=[colors.BLUE_50, colors.BLUE_200], radius=0.8, center=Alignment(0, -0.1)),
-                            width=500,
-                            height=160,
-                            border_radius=border_radius.vertical(bottom=60),
-                            border=border.all(1, colors.BLACK45),
-                            alignment=alignment.top_center,
-                            shadow=BoxShadow(8, 20, colors.BLACK38)
+        def result(event: FilePickerResultEvent):
+            if not event.files: return
+            b.value = 0
+            a.visible = b.visible = True
+            b.color = colors.BLUE
+
+            image.color_blend_mode=BlendMode.COLOR
+            self.page.update()
+            
+            self.file_picker.upload([FilePickerUploadFile(file.name, self.page.get_upload_url(file.name, 600)) for file in event.files])
+            
+        def upload(event: FilePickerUploadEvent):
+            b.value = event.progress
+            b.update()
+
+            if event.progress == 1 or event.error:
+                a.visible = False
+                b.color = colors.GREY
+
+                self.page.client_storage.set("profil_image", event.file_name)
+
+                image.src = "uploads/"+event.file_name
+                image.color_blend_mode=BlendMode.DST
+                self.page.update()
+        
+        self.file_picker.on_result = result
+        self.file_picker.on_upload = upload
+        
+        self.Login_Page = Container(
+            Column(
+                [
+                    Container(
+                        Stack(
+                            [
+                                image := Image(
+                                    "uploads/"+self.page.client_storage.get("profil_image") if self.page.client_storage.contains_key("profil_image") else "uploads/",
+                                    error_content=Icon(
+                                        icons.ACCOUNT_CIRCLE_ROUNDED,
+                                        colors.INVERSE_SURFACE,
+                                        80
+                                    ),
+                                    fit=ImageFit.COVER,
+                                    color=colors.GREY,
+                                    color_blend_mode=BlendMode.DST,
+                                    gapless_playback=True,
+                                    left=5,
+                                    right=5,
+                                    top=5,
+                                    bottom=5,
+                                    width=80,
+                                    height=80,
+                                    border_radius=40
+                                ),
+
+                                a := ProgressRing(
+                                    stroke_width=2,
+                                    width=20,
+                                    height=20,
+                                    left=35,
+                                    top=35,
+                                    visible=False
+                                ),
+
+                                b := ProgressRing(
+                                    1,
+                                    2,
+                                    colors.GREY,
+                                    left=0,
+                                    top=0,
+                                    right=0,
+                                    bottom=0,
+                                ),
+                                
+                                IconButton(
+                                    icons.CAMERA_ALT_OUTLINED,
+                                    colors.BLACK,
+                                    20,
+                                    bgcolor=colors.BLUE_100,
+                                    bottom=0,
+                                    right=0,
+                                    width=35,
+                                    height=35,
+                                    on_click=lambda e: self.file_picker.pick_files("Image", file_type=FilePickerFileType.IMAGE, allowed_extensions=['png', 'jpg'])
+                                ),
+                                
+                                IconButton(
+                                    icons.EDIT_ROUNDED,
+                                    colors.BLACK,
+                                    15,
+                                    bgcolor=colors.BLUE_100,
+                                    top=0,
+                                    right=0,
+                                    width=30,
+                                    height=30,
+                                    visible=False
+                                )
+                            ],
+                            width=90,
+                            height=90
                         ),
-                
-                        Container(
-                                Icon(
-                                icons.ACCOUNT_CIRCLE_ROUNDED,
-                                colors.BLUE_GREY_700,
-                                80,
-                            ),
-                            bgcolor=colors.WHITE,
-                            bottom=10,
-                            left=0,
-                            right=0,
-                            shape=BoxShape.CIRCLE,
-                            border=border.all(1, colors.BLACK38),
-                        )
-                    ],
-                    height=210
-                ),
-                
-                Column(
-                    [
-                        Divider(opacity=0, height=0),
+                        bgcolor=colors.WHITE,
+                        shape=BoxShape.CIRCLE,
+                        margin=margin.only(bottom=10),
+                    ),
+                    
+                    nom := TextField(
+                        label="Nom",
+                        border_radius=10,
+                        border_color=colors.BLACK38,
+                        focused_border_color=colors.PRIMARY,
+                        bgcolor=colors.WHITE,
+                        dense=True
+                    ),
 
-                        matricule := TextField(
-                            label="Matricule",
-                            border_radius=10,
-                            keyboard_type=KeyboardType.NUMBER,
-                            input_filter=InputFilter(r"[\d]+"),
-                            border_color=colors.BLACK38,
-                            focused_border_color=colors.BLUE_400,
-                            bgcolor=colors.WHITE,
-                            prefix_icon=icons.ACCOUNT_BOX_ROUNDED,
-                            dense=True,
-                            width=self.page.width - 50 if self.page.width <= 500 else 500
-                        ),
+                    postnom := TextField(
+                        label="Postnom",
+                        border_radius=10,
+                        border_color=colors.BLACK38,
+                        focused_border_color=colors.PRIMARY,
+                        bgcolor=colors.WHITE,
+                        dense=True
+                    ),
 
-                        mot_de_passe := TextField(
-                            label="Mot de passe",
-                            border_radius=10,
-                            border_color=colors.BLACK38,
-                            focused_border_color=colors.BLUE_400,
-                            bgcolor=colors.WHITE,
-                            prefix_icon=icons.KEY_ROUNDED,
-                            password=True,
-                            can_reveal_password=True,
-                            dense=True,
-                            width=self.page.width - 50 if self.page.width <= 500 else 500
-                        ),
+                    prenom := TextField(
+                        label="Prenom",
+                        border_radius=10,
+                        border_color=colors.BLACK38,
+                        focused_border_color=colors.PRIMARY,
+                        bgcolor=colors.WHITE,
+                        dense=True
+                    ),
 
-                        Divider(
-                            height=0,
-                            color=colors.TRANSPARENT
-                        ),
+                    matricule := TextField(
+                        label="Matricule",
+                        border_radius=10,
+                        keyboard_type=KeyboardType.NUMBER,
+                        input_filter=NumbersOnlyInputFilter(),
+                        border_color=colors.BLACK38,
+                        focused_border_color=colors.PRIMARY,
+                        bgcolor=colors.WHITE,
+                        prefix_icon=icons.PERM_IDENTITY_ROUNDED, #NUMBERS_OUTLINED
+                        dense=True
+                    ),
 
-                        FilledButton(
-                            content=Text("Enregistrer", theme_style=TextTheme.display_large),
-                            on_click=lambda e: (self.page.client_storage.set("identifiants", {"matricule": matricule.value, "mot_de_passe": mot_de_passe.value}), self.page.go("Accueil")),
-                            style=ButtonStyle(
-                                color={
-                                    MaterialState.DEFAULT: colors.BLACK,
-                                    MaterialState.HOVERED: colors.BLACK54
-                                },
-                                bgcolor={
-                                    MaterialState.DEFAULT: colors.LIGHT_GREEN_500,
-                                    MaterialState.HOVERED: colors.LIGHT_GREEN_700
-                                }
-                            ),
-                            width=self.page.width - 50 if self.page.width <= 500 else 500,
-                            height=50,
-                        )
-                    ],
-                    spacing=15,
-                    expand=True,
-                    horizontal_alignment=CrossAxisAlignment.CENTER,
-                    scroll=ScrollMode.ADAPTIVE
-                )
-            ],
-            alignment=MainAxisAlignment.SPACE_EVENLY,
-            horizontal_alignment=CrossAxisAlignment.CENTER,
-            expand=True
-        )
+                    mot_de_passe := TextField(
+                        label="Mot de passe",
+                        border_radius=10,
+                        border_color=colors.BLACK38,
+                        focused_border_color=colors.PRIMARY,
+                        bgcolor=colors.WHITE,
+                        prefix_icon=icons.LOCK_OUTLINE_ROUNDED,
+                        password=True,
+                        can_reveal_password=True,
+                        dense=True
+                    ),
 
-        appbar = AppBar(
-            title=Text("Connection"),
-            #center_title=True,
-            actions=[
-                IconButton(icons.BRIGHTNESS_6_OUTLINED),
-                #IconButton(icons.MORE_VERT_SHARP)
-            ],
-            elevation=0,
-            #color="red",
-            #toolbar_height=40,
-            bgcolor=colors.BLUE_200
-        )
-                
+                    Divider(
+                        height=0,
+                        opacity=0
+                    ),
+
+                    Row(
+                        [
+                            FilledButton(
+                                content=Text("Enregistrer", theme_style=TextTheme.display_large),
+                                on_click=lambda e: (self.page.client_storage.set("identifiants", {"matricule": matricule.value, "mot_de_passe": mot_de_passe.value}), self.page.go("Accueil")),
+                                height=50,
+                                expand=True
+                            )
+                        ]
+                    ),
+                ],
+                spacing=10,
+                width=400,
+                horizontal_alignment=CrossAxisAlignment.CENTER,
+                scroll=ScrollMode.ADAPTIVE,
+                expand=True
+            ),
+            alignment=alignment.center
+        )    
+
         self.page.views.append(
             View(
                 "Connection",
                 [
                     self.Login_Page
                 ],
-                appbar=appbar,
-                padding=0,
+                appbar=AppBar(
+                    title=Text("Connection"),
+                    center_title=True,
+                    actions=[
+                        IconButton(icons.BRIGHTNESS_6_OUTLINED),
+                        IconButton(icons.MORE_VERT_SHARP)
+                    ],
+                    elevation=0,
+                    bgcolor=colors.BLUE
+                ),
+                padding=padding.symmetric(30, 20),
                 bgcolor=colors.BLUE_50
             )
         )
@@ -400,15 +492,20 @@ class Main:
                                         [
                                             ListTile(
                                                 leading=Container(
-                                                    Image("profil.jpg",
-                                                        fit=ImageFit.CONTAIN,
+                                                    Image(
+                                                        "uploads/"+self.page.client_storage.get("profil_image") if self.page.client_storage.contains_key("profil_image") else "uploads/",
+                                                        error_content=Icon(
+                                                            icons.ACCOUNT_CIRCLE_ROUNDED,
+                                                            size=55
+                                                        ),
+                                                        fit=ImageFit.COVER,
                                                         gapless_playback=True,
                                                         color='grey200',
                                                         color_blend_mode=BlendMode.MODULATE,
-                                                        height=70
+                                                        width=55
                                                     ),
                                                     border_radius=30
-                                                ) if False else Icon(icons.ACCOUNT_CIRCLE_ROUNDED, size=70),
+                                                ),
                                                 title=Text("Adonis Rwabira"),
                                                 subtitle=Text("19314")
                                             ),
@@ -432,13 +529,20 @@ class Main:
                                                 alignment=alignment.center
                                             ),
                                             
-                                            Row(
-                                                [
-                                                    IconButton(icons.QR_CODE_OUTLINED),
-                                                    IconButton(icons.MANAGE_ACCOUNTS)
-                                                ],
-                                                alignment=MainAxisAlignment.END,
-                                                spacing=0
+                                            Container(
+                                                Row(
+                                                    [
+                                                        IconButton(icons.QR_CODE_OUTLINED, colors.PRIMARY),
+                                                        IconButton(icons.MANAGE_ACCOUNTS, colors.PRIMARY)
+                                                    ],
+                                                    alignment=MainAxisAlignment.END,
+                                                    spacing=0
+                                                ),
+                                                theme=Theme(
+                                                    colors.RED,
+                                                    color_scheme=ColorScheme(primary=colors.BLUE_700)
+                                                ),
+                                                theme_mode=self.page.theme_mode
                                             )
                                         ],
                                         alignment=MainAxisAlignment.SPACE_BETWEEN
@@ -494,7 +598,7 @@ class Main:
                             ],
                             scroll=ScrollMode.ADAPTIVE
                         ),
-                        bgcolor=colors.ON_SECONDARY
+                        bgcolor=colors.ON_INVERSE_SURFACE
                     )
                 ),
                 
@@ -505,6 +609,7 @@ class Main:
                             Text("Cours")
                         ]
                     ),
+                    
                     content=Container(    
                         Column(
                             [   
@@ -524,8 +629,8 @@ class Main:
                                                             vertical_alignment=CrossAxisAlignment.END,
                                                             spacing=0
                                                         ),
-                                                        height=150,
-                                                        border_radius=border_radius.vertical(15, 10),
+                                                        height=160,
+                                                        border_radius=border_radius.vertical(20),
                                                         padding=5,
                                                         bgcolor=color+"100",
                                                         #border=border.only(top=BorderSide(1, colors.GREY))
@@ -553,7 +658,7 @@ class Main:
                                             ),
                                         bgcolor=color+"200",
                                         #border=border.all(1, colors.GREY_500),
-                                        border_radius=10,
+                                        border_radius=15,
                                         col={"sm":6, "lg":4, "xxl":3}
                                         ) for cours, color in zip(("Physique", "Algèbre", "Algorithme", "Java", "Trigonométrie"), sample(["blue", "indigo", "purple", "green", "orange", "lightblue", "deeppurple", "cyan", "lightgreen"], k=5)) #[color for color in list(colors.__dict__.values())[9:] if color.endswith("100")]
                                     ]
@@ -561,8 +666,8 @@ class Main:
                             ],
                             scroll=ScrollMode.ADAPTIVE
                         ),
-                        bgcolor=colors.ON_SECONDARY,
-                        padding=padding.only(10, 20, 10)
+                        bgcolor=colors.ON_INVERSE_SURFACE,
+                        padding=padding.only(10, 25, 10)
                     )
                 ),
                 
@@ -573,6 +678,7 @@ class Main:
                             Text("Compte")
                         ]
                     ),
+                    
                     content=Container(
                         Column(
                             [
@@ -580,14 +686,24 @@ class Main:
                                     Column(
                                         [
                                             Container(
-                                                Icon(
-                                                    icons.ACCOUNT_CIRCLE_ROUNDED,
-                                                    colors.BLUE_GREY_700,
-                                                    80,
-                                                ),
-                                                bgcolor=colors.WHITE,
-                                                shape=BoxShape.CIRCLE,
-                                                border=border.all(1, colors.BLACK38),
+                                                    Image(
+                                                        "uploads/"+self.page.client_storage.get("profil_image") if self.page.client_storage.contains_key("profil_image") else "uploads/",
+                                                        error_content=Icon(
+                                                            icons.ACCOUNT_CIRCLE_ROUNDED,
+                                                            colors.INVERSE_SURFACE,
+                                                            80
+                                                        ),
+                                                        fit=ImageFit.COVER,
+                                                        gapless_playback=True,
+                                                        color='grey200',
+                                                        color_blend_mode=BlendMode.MODULATE,
+                                                        height=80,
+                                                        border_radius=40,
+                                                        width=80
+                                                    ),
+                                                    border_radius=50,
+                                                    padding=5,
+                                                    bgcolor=colors.SURFACE
                                             ),
                                             Text(self.page.client_storage.get('identifiants')['matricule'], color=colors.WHITE),
                                             Text(self.page.client_storage.get('user'), color=colors.WHITE),
@@ -621,17 +737,18 @@ class Main:
                                                     ],
                                                     alignment=MainAxisAlignment.SPACE_AROUND
                                                 ),
-                                                bgcolor=colors.BLUE_600,
+                                                bgcolor=colors.BLUE_700,
                                                 padding=padding.symmetric(0, 10)
                                             )
                                         ],
                                         horizontal_alignment=CrossAxisAlignment.CENTER
                                     ),
-                                    bgcolor=colors.BLUE_400,
+                                    bgcolor=colors.PRIMARY,
                                     border_radius=border_radius.vertical(bottom=30),
                                     width=self.page.width,
                                     padding=padding.only(top=30)
                                 ),
+                                
                                 Container(
                                     Column(
                                         [
@@ -646,7 +763,7 @@ class Main:
                                 )
                             ]
                         ),
-                        bgcolor=colors.ON_SECONDARY
+                        bgcolor=colors.ON_INVERSE_SURFACE
                     )
                 ),
             ],
@@ -657,7 +774,6 @@ class Main:
             unselected_label_color=colors.TRANSPARENT,
             divider_color=colors.TRANSPARENT,
             offset=Offset(0, -0.1),
-            on_change=lambda e: (self.page.views[-1].appbar.__setattr__("bgcolor", colors.BLUE_400 if e.data == "2" else colors.BLUE_300), self.page.views[-1].controls[0].controls[1].__setattr__("bgcolor", colors.BLUE_400 if e.data == "2" else colors.BLUE_300), self.page.update()),
             expand=True
         )
 
@@ -673,7 +789,7 @@ class Main:
                                 Column(
                                     [
                                         nav := NavigationRail(
-                                            [
+                                            destinations=[
                                                 NavigationRailDestination(
                                                     label="Accueil",
                                                     icon=icons.HOME_ROUNDED
@@ -685,11 +801,9 @@ class Main:
                                                 ),
                                                 
                                                 NavigationRailDestination(
-                                                    label="Compte",
+                                                    label="Profil",
                                                     icon=icons.ACCOUNT_CIRCLE_ROUNDED
                                                 ),
-
-                                                NavigationRailDestination(),
 
                                                 NavigationRailDestination(
                                                     label="Parametres",
@@ -701,36 +815,55 @@ class Main:
                                                     icon=icons.INFO_OUTLINE_ROUNDED
                                                 ),
 
-                                                NavigationRailDestination(),
-
-                                                NavigationRailDestination(
-                                                    label="Déconnexion",
-                                                    icon=icons.LOGOUT_ROUNDED
-                                                ),
-
-                                                NavigationRailDestination(
-                                                    label="Quitter",
-                                                    icon=icons.POWER_SETTINGS_NEW_ROUNDED
-                                                ),
-
-                                                NavigationRailDestination(
-                                                    label="Réduire",
-                                                    icon=icons.ARROW_BACK_IOS_NEW_ROUNDED
-                                                )
+                                                NavigationRailDestination()
                                             ],
+                                            
+                                            trailing=Container(
+                                                Column(
+                                                    [
+                                                        TextButton(
+                                                            "Déconnexion",
+                                                            icons.LOGOUT_ROUNDED
+                                                        ),
+
+                                                        TextButton(
+                                                            "Quitter",
+                                                            icons.POWER_SETTINGS_NEW_ROUNDED
+                                                        ),
+
+                                                        TextButton(
+                                                            "Réduire",
+                                                            icons.ARROW_BACK_IOS_NEW_ROUNDED,
+                                                            on_click=lambda e: (nav.__setattr__("extended", False), self.page.views[-1].appbar.leading.__setattr__("selected", False), self.page.update())
+                                                        ),
+                                                        
+                                                        Container(
+                                                            TextButton(
+                                                            "v1.0.0",
+                                                            icons.ANDROID_ROUNDED
+                                                            ),
+                                                            theme=Theme(color_scheme_seed=colors.GREEN_50),
+                                                            theme_mode=self.page.theme_mode
+                                                        )
+                                                    ],
+                                                    #horizontal_alignment=CrossAxisAlignment.CENTER
+                                                ),
+                                                theme=Theme(colors.BLUE),
+                                                theme_mode=self.page.theme_mode
+                                            ),
                                             extended=True,
                                             expand=True,
                                             selected_index=0,
                                             min_extended_width=200,
-                                            label_type=NavigationRailLabelType.SELECTED,
-                                            trailing=TextButton("v1.0.0"),
-                                            bgcolor=colors.ON_SECONDARY,
+                                            label_type=NavigationRailLabelType.ALL,
+                                            bgcolor=colors.ON_INVERSE_SURFACE,
                                             on_change=lambda e: (self.Home_Page.__setattr__("selected_index", e.data) if int(e.data) <= 3 else None, self.page.update())
                                         )
                                     ]
                                 ),
                                 border=border.only(right=BorderSide(1, colors.OUTLINE_VARIANT)),
-                                visible=True if self.page.width >= 700 else False
+                                visible=True if self.page.width >= 700 else False,
+                                height=700
                             ),
 
                             self.Home_Page
@@ -745,99 +878,131 @@ class Main:
                         selected_icon=icons.KEYBOARD_DOUBLE_ARROW_LEFT_ROUNDED,
                         selected=False if self.page.width <= 700 else True,
                         animate_rotation=300,
-                        rotate=Rotate(0),
+                        rotate=Rotate(3.14 if self.page.width <= 700 else 0),
                         on_click=lambda e: self.page.show_drawer(self.page.views[-1].drawer) if self.page.width <= 700 else
-                            (e.control.__setattr__("selected", not e.control.selected), e.control.rotate.__setattr__("angle", e.control.rotate.angle + 6.28), nav.__setattr__("extended", e.control.selected), self.page.update())
+                            (e.control.__setattr__("selected", not e.control.selected), e.control.rotate.__setattr__("angle", 0 if e.control.selected else 3.14), nav.__setattr__("extended", e.control.selected), self.page.update())
                     ),
                     title=Text("SoftQuiz"),
                     center_title=True if self.page.width <= 700 else False,
                     actions=[
-                        IconButton(icons.QR_CODE_SCANNER_OUTLINED),
-                        SubmenuButton(
-                            leading=Icon(icons.MORE_VERT_SHARP),
-                            controls=[
-                                MenuItemButton(
-                                    leading= IconButton(
-                                        icons.SEARCH_OUTLINED
-                                    ),
-                                    content=Text("Recherche"),
-                                    style=ButtonStyle(color=colors.BLACK),
-                                    on_click=lambda e: ...,
-                                    close_on_click=True
+                        Row(
+                            [
+                                IconButton(
+                                    icons.QR_CODE_SCANNER_OUTLINED,
+                                    on_click=lambda e: self.file_picker.pick_files('Images', file_type=FilePickerFileType.IMAGE)
                                 ),
-                                MenuItemButton(
-                                    leading=IconButton(
-                                        icons.BRIGHTNESS_6_OUTLINED,
-                                        selected_icon=icons.BRIGHTNESS_6,
-                                        selected=self.page.theme_mode == ThemeMode.DARK,
-                                        on_click=lambda e: (
-                                            (self.page.__setattr__("theme_mode", ThemeMode.LIGHT), e.control.__setattr__("selected", False)) if self.page.theme_mode == ThemeMode.DARK
-                                            else (self.page.__setattr__("theme_mode", ThemeMode.DARK), e.control.__setattr__("selected", True)),
-                                            self.page.update()
-                                        )
-                                    ),
-                                    content=Text("Dark Mode" if self.page.theme_mode == ThemeMode.LIGHT else "Light Mode"),
-                                    style=ButtonStyle(color=colors.BLACK),
-                                    on_click=lambda e: ((e.control.content.__setattr__("value", "Dark Mode"), self.page.__setattr__("theme_mode", ThemeMode.LIGHT), e.control.leading.__setattr__("selected", False)) if self.page.theme_mode == ThemeMode.DARK
-                                            else (e.control.content.__setattr__("value", "Light Mode"), self.page.__setattr__("theme_mode", ThemeMode.DARK), e.control.leading.__setattr__("selected", True)),
-                                            self.page.update()
+                                IconButton(
+                                    icons.BRIGHTNESS_6_OUTLINED,
+                                    selected_icon=icons.BRIGHTNESS_6,
+                                    selected=self.page.theme_mode == ThemeMode.DARK,
+                                    on_click=lambda e: ((self.page.__setattr__("theme_mode", ThemeMode.LIGHT), e.control.__setattr__("selected", False)) if self.page.theme_mode == ThemeMode.DARK
+                                        else (self.page.__setattr__("theme_mode", ThemeMode.DARK), e.control.__setattr__("selected", True)), self.page.update())
+                                ),
+                                PopupMenuButton(
+                                    icon=icons.MORE_VERT_SHARP,
+                                    menu_position=PopupMenuPosition.OVER,
+                                    items=[
+                                        PopupMenuItem(
+                                            "Recherche",
+                                            icons.SEARCH_OUTLINED
                                         ),
-                                    close_on_click=True
-                                ),
-                                MenuItemButton(
-                                    leading=IconButton(
-                                        icons.SETTINGS_OUTLINED
-                                    ),
-                                    content=Text("Paramètres"),
-                                    style=ButtonStyle(color=colors.BLACK),
-                                    on_click=lambda e: ...,
-                                    close_on_click=True
-                                ),
-                                MenuItemButton(
-                                    leading=IconButton(
-                                        icons.BUG_REPORT_OUTLINED
-                                    ),
-                                    content=Text("Signaler un bug"),
-                                    style=ButtonStyle(color=colors.BLACK),
-                                    on_click=lambda e: ...,
-                                    close_on_click=True
-                                ),
-                                MenuItemButton(
-                                    leading=IconButton(
-                                        icons.LIVE_HELP_OUTLINED
-                                    ),
-                                    content=Text("Aide"),
-                                    style=ButtonStyle(color=colors.BLACK),
-                                    on_click=lambda e: ...,
-                                    close_on_click=True
+                                        PopupMenuItem(
+                                            "Paramètres",
+                                            icons.SETTINGS_OUTLINED
+                                        ),
+                                        PopupMenuItem(
+                                            "Signaler un bug",
+                                            icons.BUG_REPORT_OUTLINED
+                                        ),
+                                        PopupMenuItem(
+                                            "Aide",
+                                            icons.LIVE_HELP_OUTLINED
+                                        )
+                                    ]
                                 )
                             ],
-                            menu_style=MenuStyle(
-                                elevation=10,
-                                shape=BeveledRectangleBorder(radius=10)
-                            ),
-                            width=40,
-                            offset=Offset(-0.2, 0)
+                            spacing=0
                         )
                     ],
                     elevation=0,
                     toolbar_height=80 if self.page.width <= 700 else 70,
-                    bgcolor=colors.BLUE_300
+                    bgcolor=colors.PRIMARY
                 ),
                 
                 bottom_appbar=BottomAppBar(
-                    bgcolor=colors.BLUE_300,
+                    bgcolor=colors.PRIMARY,
                     shape=NotchShape.CIRCULAR,
                     notch_margin=15,
                     clip_behavior=ClipBehavior.ANTI_ALIAS,
                     content=Container(
                         Row(
                             [
-                                Column([selected := IconButton(icons.HOME_ROUNDED, icon_color=colors.BLACK, bgcolor=colors.BLUE_50, on_click=lambda e: (self.selected.__setattr__("bgcolor", colors.TRANSPARENT), e.control.__setattr__("bgcolor", colors.WHITE), self.__setattr__("selected", e.control), self.Home_Page.__setattr__("selected_index", 0), self.page.update())), Text("Accueil")], horizontal_alignment=CrossAxisAlignment.CENTER, spacing=0, expand=2),
-                                Column([IconButton(icon=icons.COLLECTIONS_BOOKMARK_OUTLINED, icon_color=colors.BLACK, on_click=lambda e: (self.selected.__setattr__("bgcolor", colors.TRANSPARENT), e.control.__setattr__("bgcolor", colors.WHITE), self.__setattr__("selected", e.control), self.Home_Page.__setattr__("selected_index", 1), self.page.update())), Text("Cours")], horizontal_alignment=CrossAxisAlignment.CENTER, spacing=0, expand=2),
+                                Column(
+                                    [
+                                        selected := IconButton(
+                                            icons.HOME_OUTLINED,
+                                            colors.BLACK,
+                                            selected=True,
+                                            selected_icon_color=colors.BLACK,
+                                            selected_icon=icons.HOME_ROUNDED,
+                                            style=ButtonStyle(bgcolor={MaterialState.SELECTED:colors.BLUE_50, MaterialState.DEFAULT: colors.TRANSPARENT}),
+                                            on_click=lambda e: (self.selected.__setattr__("selected", False), e.control.__setattr__("selected", True), self.__setattr__("selected", e.control), self.Home_Page.__setattr__("selected_index", 0), self.page.update())),
+                                        
+                                        Text("Accueil")
+                                    ],
+                                    horizontal_alignment=CrossAxisAlignment.CENTER,
+                                    spacing=0,
+                                    expand=2
+                                ),
+                                Column(
+                                    [
+                                        IconButton(
+                                            icons.COLLECTIONS_BOOKMARK_OUTLINED,
+                                            colors.BLACK,
+                                            selected_icon_color=colors.BLACK,
+                                            selected_icon=icons.COLLECTIONS_BOOKMARK_ROUNDED,
+                                            style=ButtonStyle(bgcolor={MaterialState.SELECTED:colors.BLUE_50, MaterialState.DEFAULT: colors.TRANSPARENT}),
+                                            on_click=lambda e: (self.selected.__setattr__("selected", False), e.control.__setattr__("selected", True), self.__setattr__("selected", e.control), self.Home_Page.__setattr__("selected_index", 1), self.page.update())),
+                                        
+                                        Text("Cours")
+                                    ],
+                                    horizontal_alignment=CrossAxisAlignment.CENTER,
+                                    spacing=0,
+                                    expand=2
+                                ),
                                 Column([Icon(icons.SWIPE_UP_ALT_OUTLINED, opacity=0)], alignment=MainAxisAlignment.END, horizontal_alignment=CrossAxisAlignment.CENTER, expand=2, opacity=1),
-                                Column([IconButton(icon=icons.SUPERVISOR_ACCOUNT_OUTLINED, icon_color=colors.BLACK, on_click=lambda e: (self.selected.__setattr__("bgcolor", colors.TRANSPARENT), e.control.__setattr__("bgcolor", colors.WHITE), self.__setattr__("selected", e.control), self.Home_Page.__setattr__("selected_index", 2), self.page.update())), Text("Compte")], horizontal_alignment=CrossAxisAlignment.CENTER, spacing=0, expand=2),
-                                Column([IconButton(icon=icons.SETTINGS_OUTLINED, icon_color=colors.BLACK, on_click=lambda e: (self.selected.__setattr__("bgcolor", colors.TRANSPARENT), e.control.__setattr__("bgcolor", colors.WHITE), self.__setattr__("selected", e.control), self.page.update())), Text("Options")], horizontal_alignment=CrossAxisAlignment.CENTER, spacing=0, expand=2),
+                                Column(
+                                    [
+                                        IconButton(
+                                            icons.ACCOUNT_CIRCLE_OUTLINED,
+                                            colors.BLACK,
+                                            selected_icon_color=colors.BLACK,
+                                            selected_icon=icons.ACCOUNT_CIRCLE_ROUNDED,
+                                            style=ButtonStyle(bgcolor={MaterialState.SELECTED:colors.BLUE_50, MaterialState.DEFAULT: colors.TRANSPARENT}),
+                                            on_click=lambda e: (self.selected.__setattr__("selected", False), e.control.__setattr__("selected", True), self.__setattr__("selected", e.control), self.Home_Page.__setattr__("selected_index", 2), self.page.update())),
+                                        
+                                        Text("Profil")
+                                    ],
+                                    horizontal_alignment=CrossAxisAlignment.CENTER,
+                                    spacing=0,
+                                    expand=2
+                                ),
+                                Column(
+                                    [
+                                        IconButton(
+                                            icons.SETTINGS_OUTLINED,
+                                            colors.BLACK,
+                                            selected_icon_color=colors.BLACK,
+                                            selected_icon=icons.SETTINGS_ROUNDED,
+                                            style=ButtonStyle(bgcolor={MaterialState.SELECTED:colors.BLUE_50, MaterialState.DEFAULT: colors.TRANSPARENT}),
+                                            on_click=lambda e: (self.selected.__setattr__("selected", False), e.control.__setattr__("selected", True), self.__setattr__("selected", e.control), self.Home_Page.__setattr__("selected_index", 3), self.page.update())),
+                                        
+                                        Text("Options")
+                                    ],
+                                    horizontal_alignment=CrossAxisAlignment.CENTER,
+                                    spacing=0,
+                                    expand=2
+                                ),
                             ],
                             alignment=MainAxisAlignment.SPACE_AROUND,
                             spacing = 10
@@ -877,7 +1042,7 @@ class Main:
                         ),
                         
                         NavigationDrawerDestination(
-                            "Compte",
+                            "Profil",
                             icons.ACCOUNT_CIRCLE_ROUNDED
                         ),
 
@@ -902,7 +1067,8 @@ class Main:
                                 [
                                     TextButton(
                                         "Déconnexion",
-                                        icons.LOGOUT_ROUNDED
+                                        icons.LOGOUT_ROUNDED,
+                                        on_click=lambda e: self.page.show_dialog(self.page.dialog)
                                     ),
 
                                     TextButton(
@@ -912,19 +1078,27 @@ class Main:
 
                                     TextButton(
                                         "Réduire",
-                                        icons.ARROW_BACK_IOS_OUTLINED
-                                    )
+                                        icons.ARROW_BACK_IOS_OUTLINED,
+                                        on_click=lambda e: self.page.close_drawer()
+                                    ),
+                                    
+                                    Container(
+                                        TextButton(
+                                            "v1.0.0",
+                                            icons.ANDROID_ROUNDED
+                                        ),
+                                        theme=Theme(color_scheme_seed=colors.GREEN_50),
+                                        theme_mode=self.page.theme_mode
+                                    )             
                                 ],
                                 spacing=5
                             ),
+                            theme=Theme(colors.BLUE),
+                            theme_mode=self.page.theme_mode,
                             padding=padding.only(left=20)
-                        ),
-
-                        TextButton("v1.0.0"),
-                    ],
-                    on_change=lambda e: (self.page.show_dialog(self.page.dialog) if e.data == "5" else
-                                         self.page.close_drawer() if e.data == "7" else None)
-                ) if self.page.width <= 700 else None,
+                        )
+                    ]
+                ),
 
                 floating_action_button=FloatingActionButton(
                     content=PopupMenuButton(
@@ -935,37 +1109,39 @@ class Main:
                         ),
                         items=[
                             PopupMenuItem(
-                                "Evaluation locale",
+                                "Evaluation WIFI",
                                 icons.BROADCAST_ON_HOME_ROUNDED, #ADD_TO_QUEUE_OUTLINED,
                                 on_click=lambda e: self.page.go("Evaluation_locale")
-                            ),
-                            PopupMenuItem(
-                                "Nouveau cours",
-                                icons.MY_LIBRARY_ADD_OUTLINED
-                            ),
-                            PopupMenuItem(
-                                "Nouveau Document",
-                                icons.POST_ADD_OUTLINED
-                            ),
-                            PopupMenuItem(
-                                "Nouvelle classe",
-                                icons.DOMAIN_ADD_OUTLINED
                             ),
                             PopupMenuItem(
                                 "Nouvelle evaluation",
                                 icons.ASSIGNMENT_ADD
                             ),
+                            PopupMenuItem(),
+                            PopupMenuItem(
+                                "Nouvelle classe",
+                                icons.DOMAIN_ADD_OUTLINED
+                            ),
+                            PopupMenuItem(
+                                "Nouveau cours",
+                                icons.MY_LIBRARY_ADD_OUTLINED
+                            ),
+                            PopupMenuItem(),
                             PopupMenuItem(
                                 "Nouvelle personne",
                                 icons.PERSON_ADD_ALT_1_OUTLINED
+                            ),
+                            PopupMenuItem(
+                                "Nouveau Document",
+                                icons.POST_ADD_OUTLINED
                             )
                         ]
                     ),
-                    bgcolor=colors.BLUE_300
+                    bgcolor=colors.PRIMARY
                 ),
                 
                 floating_action_button_location=FloatingActionButtonLocation.CENTER_DOCKED if self.page.width <= 700 else FloatingActionButtonLocation.END_FLOAT,
-                bgcolor=colors.ON_SECONDARY,
+                bgcolor=colors.ON_INVERSE_SURFACE,
                 padding=0,
             )
         )
@@ -1043,7 +1219,7 @@ class Main:
                         Column(
                             [
                                 Text(
-                                    "Recherche d'une évaluation",
+                                    "Recherche de l'évaluation",
                                     theme_style=TextThemeStyle.TITLE_MEDIUM
                                 ),
 
@@ -1090,20 +1266,20 @@ class Main:
                         icons.ARROW_BACK_ROUNDED,
                         on_click=lambda e: self.page.show_dialog(self.page.dialog)
                     ),
-                    title=Text("Evalution"),
+                    title=Text("Evaluation"),
                     center_title=True,
                     actions=[
                         IconButton(icons.HELP_OUTLINE)
                     ],
                     elevation=0,
-                    bgcolor=colors.BLUE_400
+                    bgcolor=colors.PRIMARY
                 ),
                 
                 floating_action_button=FloatingActionButton(
                     content=PopupMenuButton(
                         Icon(
-                            icons.CONSTRUCTION_OUTLINED , #HOME_ROUNDED, #CALCULATE_OUTLINED
-                            colors.WHITE,
+                            icons.DESIGN_SERVICES_OUTLINED,
+                            colors.BLACK,
                             size=26
                         ),
                         items=[
@@ -1127,7 +1303,7 @@ class Main:
                             )
                         ]
                     ),
-                    bgcolor=colors.BLUE_400
+                    bgcolor=colors.PRIMARY
                 ),
                 
                 floating_action_button_location=FloatingActionButtonLocation.END_FLOAT,
@@ -1182,4 +1358,4 @@ class Main:
             self.__init__(self.page)
 
 
-app(Main, port=80, host="192.168.173.1", view=AppView.FLET_APP_WEB)
+app(Main, port=80, host="192.168.173.1", upload_dir="assets/uploads", view=AppView.FLET_APP_WEB)
